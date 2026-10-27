@@ -84,7 +84,7 @@
 ## 4. Current Status
 - **Database**: Supabase PostgreSQL with pooled (`POSTGRES_PRISMA_URL` :6543) and direct migration (`POSTGRES_URL_NON_POOLING` :5432) connections via Prisma. All 7 tables verified active in database (`User`, `UserApiKey`, `Interview`, `InterviewRound`, `CodingSubmission`, `TranscriptMessage`, `EvaluationReport`). Live authentication and key encryption tested.
 - **Account Management & Navbar**: Dynamic navigation bar (`Navbar.tsx`) with real-time auth detection, candidate profile pill, and one-click Logout endpoint (`/api/auth/logout`).
-- **Engine Scoping (Local vs Deployed)**: Antigravity AI Sub-Agent and Local Ollama are available and active on local environments (`localhost`), but disabled with explanatory hover tooltips on public/deployed environments directing users to clone the repo for local execution.
+- **Engine Scoping (Local vs Deployed)**: Antigravity AI Sub-Agent actively runs local AI models (DeepSeek-R1 / local LLM) combined with compromise NLP semantic parsing to dynamically question candidates on their real answers (no static/canned text). On deployed environments, it is disabled with explanatory hover tooltips guiding visitors to clone the repo.
 - **Documentation**: Comprehensive `README.md` added explaining Antigravity Sub-Agent, Ollama setup, BYOK encryption, and database sync.
 - **Dev Testing Account**: Created `dev@aiinterviewer.io` for development & integration testing. Auto-fill badge is strictly guarded to appear only in local development environments (`NODE_ENV !== 'production'` and `localhost`) and never on deployed production environments.
 - **Git Repository**: Pushed and synced to `https://github.com/Paurushmuley/AI-Interviewer-Agent-Application.git` on branch `main`.
