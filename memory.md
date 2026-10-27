@@ -94,7 +94,8 @@
   - Lead AI Interviewer Avatar configured as **Arohi** (`Arohi (Lead Tech Interviewer • Indian Voice)`).
   - Speech synthesis sets **Arohi** (`Microsoft आरोही Online (Natural) - Marathi (India)` / `Aarohi` / `Arohi`) as the top-priority default voice, falling back to other neural Indian voices (`Neerja`, `Prabhat`, `Google English India`, `Heera`, `Ravi`).
   - Added speech text sanitizer (`cleanSpokenText`) stripping markdown symbols, asterisks, bullet points, and `<think>` reasoning tags to eliminate robotic cadence and stuttering.
-  - Human conversational cadence calibrated at `rate: 0.94` and adapts dynamically to the voice's native language tag.
+  - Accelerated speech tempo calibrated at default `1.12x` (`1.12`), eliminating dragging and sluggishness while preserving natural neural warmth on Microsoft Arohi.
+  - Added interactive in-header speech speed selector dropdown (`1.0x Normal`, `1.12x Natural Fast (Default)`, `1.2x Brisk`, `1.3x Rapid`) with instant audio confirmation preview.
   - Added interactive voice selector dropdown in the top session bar highlighting `⭐ 🇮🇳 Microsoft आरोही Online (Natural) (Default)`.
   - Added one-click audio replay button on interviewer transcript messages.
   - Updated system prompts across Antigravity Sub-Agent, Ollama Adapter, and BYOK Unified Adapter for Arohi.

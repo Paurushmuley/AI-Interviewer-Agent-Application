@@ -74,6 +74,9 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   // Voice & Speech synthesis state
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [speechRate, setSpeechRate] = useState<number>(1.12); // Natural, brisk human conversational tempo (upgraded from slow 0.94)
+  const speechRateRef = useRef(speechRate);
+  speechRateRef.current = speechRate;
 
   // Helper to prioritize Arohi as default Indian voice
   const findIndianVoice = (voiceList: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null => {
@@ -246,7 +249,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
 
     const utterance = new SpeechSynthesisUtterance(cleaned);
     utterance.lang = 'en-IN'; // Set Indian English locale
-    utterance.rate = 0.94;    // Human conversational cadence (natural pacing, avoids robotic rush)
+    utterance.rate = speechRateRef.current; // Natural, brisk cadence (default 1.12x, eliminates sluggishness)
     utterance.pitch = 1.0;
 
     // Pick Indian voice (Arohi prioritized as default)
@@ -631,7 +634,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                       const previewName = found.name.includes('आरोही') || found.name.toLowerCase().includes('arohi') ? 'Arohi' : (found.name.split('-')[0].replace(/Microsoft|Online|Natural|Google/gi, '').trim() || found.name);
                       const testUtterance = new SpeechSynthesisUtterance(`Hello! Voice set to ${previewName}.`);
                       testUtterance.voice = found;
-                      testUtterance.rate = 0.94;
+                      testUtterance.rate = speechRateRef.current;
                       testUtterance.lang = found.lang || 'en-IN';
                       window.speechSynthesis.speak(testUtterance);
                     }
@@ -652,6 +655,37 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
               </select>
             </div>
           )}
+
+          {/* Interviewer Speaking Pace / Speed Selector */}
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+            <span className="text-amber-400 font-bold text-xs" title="Speaking Pace">⚡</span>
+            <select
+              value={speechRate}
+              onChange={(e) => {
+                const newRate = parseFloat(e.target.value);
+                setSpeechRate(newRate);
+                speechRateRef.current = newRate;
+                if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                  window.speechSynthesis.cancel();
+                  const testUtterance = new SpeechSynthesisUtterance(`Speed ${newRate}x.`);
+                  const activeVoice = selectedVoice || findIndianVoice(window.speechSynthesis.getVoices());
+                  if (activeVoice) {
+                    testUtterance.voice = activeVoice;
+                    testUtterance.lang = activeVoice.lang || 'en-IN';
+                  }
+                  testUtterance.rate = newRate;
+                  window.speechSynthesis.speak(testUtterance);
+                }
+              }}
+              className="bg-transparent text-slate-300 text-xs focus:outline-none cursor-pointer"
+              title="Interviewer Speech Speed"
+            >
+              <option value="1.0" className="bg-slate-900 text-white">1.0x Normal</option>
+              <option value="1.12" className="bg-slate-900 text-white">1.12x Natural (Fast)</option>
+              <option value="1.2" className="bg-slate-900 text-white">1.2x Brisk</option>
+              <option value="1.3" className="bg-slate-900 text-white">1.3x Rapid</option>
+            </select>
+          </div>
 
           <div
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold ${

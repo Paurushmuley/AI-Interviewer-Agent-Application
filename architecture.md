@@ -173,10 +173,12 @@ To replace robotic speech with authentic, warm human cadence, the audio synthesi
    - Explicitly aligns `utterance.lang` to match the selected natural voice.
 2. **Text Sanitization (`cleanSpokenText`)**:
    - Strips markdown asterisks, backticks, headings, bullet points, and reasoning `<think>` tags before delivering text to the Web Speech synthesizer, preventing unnatural symbol pronunciation and pauses.
-3. **Conversational Cadence**:
-   - Calibrated rate of `0.94` and pitch `1.0` for natural human pacing without mechanical rushing.
-4. **Interactive Voice Selector (`🇮🇳`)**:
-   - Session bar dropdown allowing candidates to select from detected voices with immediate speech confirmation, highlighting `⭐ 🇮🇳 Microsoft आरोही Online (Natural) (Default)`.
+3. **Conversational Cadence & Accelerated Speaking Pace**:
+   - Calibrated default rate at `1.12x` (upgraded from slow `0.94`) with pitch `1.0` to eliminate sluggish phoneme stretching on Microsoft Arohi and neural natural voices.
+   - Provides a lively, energetic, and authentic human conversational tempo.
+4. **Interactive Voice & Speed Controls (`🇮🇳` & `⚡`)**:
+   - Session bar voice dropdown allowing candidates to select from detected voices with immediate speech confirmation, highlighting `⭐ 🇮🇳 Microsoft आरोही Online (Natural) (Default)`.
+   - Speed selector dropdown allowing real-time adjustment between `1.0x (Normal)`, `1.12x (Natural Fast - Default)`, `1.2x (Brisk)`, and `1.3x (Rapid)` with instant audio preview feedback.
 5. **AI Interviewer Persona**:
    - Avatar named **Arohi** (`Arohi (Lead Tech Interviewer • Indian Voice)`).
    - System prompts across local and cloud engines instructed with warm, articulate Indian English phrasing ("Understood", "Right, could you walk me through...").
