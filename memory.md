@@ -90,14 +90,14 @@
 - **Git Repository**: Pushed and synced to `https://github.com/Paurushmuley/AI-Interviewer-Agent-Application.git` on branch `main`.
 - **Encryption**: AES-256-GCM authenticated cipher driven by `ENCRYPTION_MASTER_KEY`.
 - **Server**: Running locally on port 5000 (`http://localhost:5000`).
-- **Indian English Human Accent (`en-IN`)**:
-  - Lead AI Interviewer Avatar configured as **Ananya** (`Ananya (Lead Tech Interviewer • en-IN)`).
-  - Speech synthesis prioritizes Natural/Neural Indian English voices (`Microsoft Neerja Online (Natural) - English (India)`, `Microsoft Prabhat Online (Natural) - English (India)`, `Google English (India)`, `Microsoft Heera / Ravi`, `Veena`, `Rishi`).
+- **Indian English Human Accent & Default Arohi Voice (`en-IN`)**:
+  - Lead AI Interviewer Avatar configured as **Arohi** (`Arohi (Lead Tech Interviewer • Indian Voice)`).
+  - Speech synthesis sets **Arohi** (`Microsoft आरोही Online (Natural) - Marathi (India)` / `Aarohi` / `Arohi`) as the top-priority default voice, falling back to other neural Indian voices (`Neerja`, `Prabhat`, `Google English India`, `Heera`, `Ravi`).
   - Added speech text sanitizer (`cleanSpokenText`) stripping markdown symbols, asterisks, bullet points, and `<think>` reasoning tags to eliminate robotic cadence and stuttering.
-  - Human conversational cadence calibrated at `rate: 0.94` and `utterance.lang = 'en-IN'`.
-  - Added interactive Indian English voice selector dropdown (`🇮🇳`) in the top session bar with instantaneous audio preview on voice switch.
+  - Human conversational cadence calibrated at `rate: 0.94` and adapts dynamically to the voice's native language tag.
+  - Added interactive voice selector dropdown in the top session bar highlighting `⭐ 🇮🇳 Microsoft आरोही Online (Natural) (Default)`.
   - Added one-click audio replay button on interviewer transcript messages.
-  - Updated system prompts across Antigravity Sub-Agent, Ollama Adapter, and BYOK Unified Adapter for warm, articulate Indian English dialogue.
+  - Updated system prompts across Antigravity Sub-Agent, Ollama Adapter, and BYOK Unified Adapter for Arohi.
 - **Hands-Free Two-Way Live Communication**:
   - Full-duplex conversational loop:
     1. AI interviewer (Ananya) speaks -> avatar lip-syncs -> microphone is safely muted to avoid computer speaker loopback.

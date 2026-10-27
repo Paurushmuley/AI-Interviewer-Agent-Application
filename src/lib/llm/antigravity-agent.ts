@@ -191,7 +191,7 @@ export class AntigravityInterviewSubAgent {
 
       const formattedQA = qaPairs.map((p, i) => `Q${i + 1}: ${p.question}\nCandidate Answer ${i + 1}: "${p.answer}"`).join('\n\n');
 
-      const systemPrompt = `You are Ananya, Lead Technical Interviewer generating a personalized performance evaluation for a ${interviewContext.experienceLevel} ${interviewContext.roleTitle}.
+      const systemPrompt = `You are Arohi, Lead Technical Interviewer generating a personalized performance evaluation for a ${interviewContext.experienceLevel} ${interviewContext.roleTitle}.
 Job Description: ${interviewContext.jobDescription || 'N/A'}.
 
 CRITICAL REQUIREMENTS:
@@ -361,7 +361,7 @@ Return valid JSON:
     improvementLines.push(`• Technical Depth & Edge-Cases: In discussions surrounding ${Array.from(candidateTechTerms)[1] || 'system architecture'}, dive deeper into concurrency bottlenecks, database indexing tradeoffs, and fault tolerance.`);
 
     // 6. Formulate Customized Detailed Feedback
-    const detailedFeedback = `Candidate completed the live technical interview with Ananya for the ${interviewContext.experienceLevel} ${interviewContext.roleTitle} role. Overall performance scored ${overallScore}/100.
+    const detailedFeedback = `Candidate completed the live technical interview with Arohi for the ${interviewContext.experienceLevel} ${interviewContext.roleTitle} role. Overall performance scored ${overallScore}/100.
 
 During the conversational technical evaluation, the candidate addressed questions on ${spokenTechsList}, specifically stating: "${primaryQuote}". Verbal speech analytics recorded an average speaking cadence of ${speechStats.avgWpm} WPM with a ${speechStats.avgConfidence}% confidence score and ${speechStats.totalFillers} total filler words. 
 
@@ -412,7 +412,7 @@ Vocabulary analysis revealed a ${wordStats.lexicalDiversityPercent}% lexical div
       // Find installed model or default to deepseek-r1:1.5b / llama3.2
       const detectedModel = await this.getActiveLocalModel();
 
-      const systemPrompt = `You are Ananya, the Lead AI Technical Interviewer speaking in a professional, warm Indian English conversational tone for a ${context.experienceLevel} ${context.roleTitle}.
+      const systemPrompt = `You are Arohi, the Lead AI Technical Interviewer speaking in a professional, warm Indian English conversational tone for a ${context.experienceLevel} ${context.roleTitle}.
 Total interview duration: ${context.totalDurationMinutes} mins. Remaining: ${context.remainingMinutes} mins.
 Target Job Description: ${context.jobDescription}.
 Candidate Skills: ${context.candidateSkills.join(', ')}.
@@ -480,7 +480,7 @@ CRITICAL RULES:
     if (turnCount === 0) {
       const topSkill = context.matchedSkills[0] || context.candidateSkills[0] || 'your core technologies';
       return {
-        content: `Hello! I'm Ananya, the Antigravity AI Sub-Agent assigned as your lead interviewer today for the ${context.roleTitle} position. We have a scheduled duration of ${context.totalDurationMinutes} minutes to explore your engineering background, dive into real-world architecture, and tackle a live coding scenario. To begin, could you introduce yourself and highlight a challenging project where you leveraged ${topSkill}?`,
+        content: `Hello! I'm Arohi, the Antigravity AI Sub-Agent assigned as your lead interviewer today for the ${context.roleTitle} position. We have a scheduled duration of ${context.totalDurationMinutes} minutes to explore your engineering background, dive into real-world architecture, and tackle a live coding scenario. To begin, could you introduce yourself and highlight a challenging project where you leveraged ${topSkill}?`,
         stageTransition: 'continue',
       };
     }

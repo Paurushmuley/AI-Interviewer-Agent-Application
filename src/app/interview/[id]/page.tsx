@@ -75,9 +75,18 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
 
-  // Helper to prioritize natural Indian English voices
+  // Helper to prioritize Arohi as default Indian voice
   const findIndianVoice = (voiceList: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null => {
     if (!voiceList || voiceList.length === 0) return null;
+
+    // 0. TOP PRIORITY: Arohi / Aarohi / आरोही (User's preferred default voice)
+    const arohiVoice = voiceList.find(
+      v =>
+        v.name.includes('आरोही') ||
+        v.name.toLowerCase().includes('arohi') ||
+        v.name.toLowerCase().includes('aarohi')
+    );
+    if (arohiVoice) return arohiVoice;
 
     // 1. Natural / Neural Indian English (Microsoft Edge / Windows Online Natural)
     const naturalIndian = voiceList.find(
@@ -240,10 +249,11 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     utterance.rate = 0.94;    // Human conversational cadence (natural pacing, avoids robotic rush)
     utterance.pitch = 1.0;
 
-    // Pick Indian voice
+    // Pick Indian voice (Arohi prioritized as default)
     const activeVoice = selectedVoice || findIndianVoice(window.speechSynthesis.getVoices());
     if (activeVoice) {
       utterance.voice = activeVoice;
+      utterance.lang = activeVoice.lang || 'en-IN';
     }
 
     utterance.onstart = () => {
@@ -258,7 +268,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
       isAiSpeakingRef.current = false;
       setTurnStartTime(Date.now()); // Mark start of candidate turn
 
-      // TWO-WAY COMMUNICATION: When Ananya finishes speaking, immediately start listening to candidate!
+      // TWO-WAY COMMUNICATION: When Arohi finishes speaking, immediately start listening to candidate!
       if (isTwoWayModeRef.current) {
         startSpeechRecognition();
       }
@@ -618,21 +628,25 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                     setSelectedVoice(found);
                     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
                       window.speechSynthesis.cancel();
-                      const previewName = found.name.split('-')[0].replace(/Microsoft|Online|Natural|Google/gi, '').trim() || found.name;
+                      const previewName = found.name.includes('आरोही') || found.name.toLowerCase().includes('arohi') ? 'Arohi' : (found.name.split('-')[0].replace(/Microsoft|Online|Natural|Google/gi, '').trim() || found.name);
                       const testUtterance = new SpeechSynthesisUtterance(`Hello! Voice set to ${previewName}.`);
                       testUtterance.voice = found;
                       testUtterance.rate = 0.94;
-                      testUtterance.lang = 'en-IN';
+                      testUtterance.lang = found.lang || 'en-IN';
                       window.speechSynthesis.speak(testUtterance);
                     }
                   }
                 }}
                 className="bg-transparent text-slate-300 text-xs focus:outline-none cursor-pointer max-w-[120px] md:max-w-[160px] truncate"
-                title="Select Interviewer Voice (Prioritizing Indian English • en-IN)"
+                title="Select Interviewer Voice (Default: Arohi)"
               >
                 {availableVoices.map((v) => (
                   <option key={v.name} value={v.name} className="bg-slate-900 text-white">
-                    {v.lang.toLowerCase().includes('in') || v.name.toLowerCase().includes('india') ? `🇮🇳 ${v.name}` : v.name}
+                    {v.name.includes('आरोही') || v.name.toLowerCase().includes('arohi')
+                      ? `⭐ 🇮🇳 ${v.name} (Default)`
+                      : v.lang.toLowerCase().includes('in') || v.name.toLowerCase().includes('india')
+                      ? `🇮🇳 ${v.name}`
+                      : v.name}
                   </option>
                 ))}
               </select>
@@ -673,10 +687,10 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                 isThinking={isAiThinking}
                 interviewerName={
                   interview?.llmProvider === 'antigravity' || interview?.llmProvider === 'local'
-                    ? 'Ananya (Antigravity AI Sub-Agent • en-IN)'
+                    ? 'Arohi (Antigravity AI Sub-Agent • Indian Voice)'
                     : interview?.llmProvider === 'ollama'
-                    ? `Ananya (Ollama • ${interview?.llmModel || 'Local Model'} • en-IN)`
-                    : `Ananya (${interview?.llmProvider?.toUpperCase()} • BYOK • en-IN)`
+                    ? `Arohi (Ollama • ${interview?.llmModel || 'Local Model'} • Indian Voice)`
+                    : `Arohi (${interview?.llmProvider?.toUpperCase()} • BYOK • Indian Voice)`
                 }
               />
               <CandidateCam candidateName="You (Candidate)" isRecording={isRecording} />
@@ -689,12 +703,12 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                   </div>
                   <h3 className="text-lg font-bold text-white mb-1.5">Live Two-Way Video Call Ready</h3>
                   <p className="text-xs text-slate-300 max-w-md mb-5 leading-relaxed">
-                    Lead Technical Interviewer <strong className="text-blue-400">Ananya</strong> is online.
+                    Lead Technical Interviewer <strong className="text-blue-400">Arohi</strong> is online.
                     Two-way conversational audio is enabled. When you speak, the application will catch your words and process them dynamically.
                   </p>
                   <button
                     onClick={handleStartCall}
-                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm flex items-center gap-2.5 shadow-xl shadow-blue-500/25 transition-all transform hover:scale-105 active:scale-95"
+                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm flex items-center gap-2.5 shadow-xl shadow-blue-500/25 transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
                   >
                     <PhoneCall className="w-4 h-4" />
                     <span>Join Video Call & Start Speaking</span>
@@ -758,11 +772,11 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                 {/* Conversation State Indicators */}
                 {isAiSpeaking ? (
                   <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
-                    <Volume2 className="w-3.5 h-3.5 animate-pulse" /> Ananya is speaking...
+                    <Volume2 className="w-3.5 h-3.5 animate-pulse" /> Arohi is speaking...
                   </span>
                 ) : isAiThinking ? (
                   <span className="text-[11px] text-purple-400 flex items-center gap-1 font-medium">
-                    <Sparkles className="w-3.5 h-3.5 animate-spin" /> Ananya analyzing response...
+                    <Sparkles className="w-3.5 h-3.5 animate-spin" /> Arohi analyzing response...
                   </span>
                 ) : isRecording ? (
                   <span className="text-[11px] text-rose-400 flex items-center gap-1 font-medium animate-pulse">
@@ -777,7 +791,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
               <div className="flex items-center justify-between px-3 py-1.5 bg-blue-500/15 border border-blue-500/30 rounded-xl text-xs text-blue-200 animate-pulse">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Answer captured. Sending to Ananya in <strong>{autoSendingCountdown}s</strong>...</span>
+                  <span>Answer captured. Sending to Arohi in <strong>{autoSendingCountdown}s</strong>...</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -873,14 +887,14 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                 }`}
               >
                 <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1 font-semibold uppercase">
-                  <span>{msg.sender === 'agent' ? 'Ananya (AI Interviewer • en-IN)' : msg.sender === 'system' ? 'System' : 'You'}</span>
+                  <span>{msg.sender === 'agent' ? 'Arohi (AI Interviewer • Indian Voice)' : msg.sender === 'system' ? 'System' : 'You'}</span>
                   <div className="flex items-center gap-1.5">
                     {msg.sender === 'agent' && (
                       <button
                         type="button"
                         onClick={() => speakText(msg.content)}
                         className="text-blue-400 hover:text-blue-300 p-0.5 rounded transition-colors"
-                        title="Replay Voice (en-IN)"
+                        title="Replay Voice (Arohi)"
                       >
                         <Volume2 className="w-3 h-3" />
                       </button>

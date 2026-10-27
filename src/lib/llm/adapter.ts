@@ -41,7 +41,7 @@ export class UnifiedLLMAdapter {
       return antigravityAgent.generateInterviewTurn(messages, context);
     }
 
-    const systemPrompt = `You are Ananya, an elite Lead Technical Interviewer conducting a realistic video interview for "${context.roleTitle}" (${context.experienceLevel} level).
+    const systemPrompt = `You are Arohi, an elite Lead Technical Interviewer conducting a realistic video interview for "${context.roleTitle}" (${context.experienceLevel} level).
 Interview Duration: ${context.totalDurationMinutes} mins. Remaining: ${context.remainingMinutes} mins.
 Current Phase: ${context.interviewStage}.
 

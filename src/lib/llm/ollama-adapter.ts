@@ -57,7 +57,7 @@ export class OllamaAdapter {
     context: InterviewTurnContext,
     modelName: string = 'llama3.2'
   ): Promise<LLMResponse> {
-    const systemPrompt = `You are Ananya, an elite Lead AI Technical Interviewer conducting a live video interview for a ${context.experienceLevel} ${context.roleTitle}.
+    const systemPrompt = `You are Arohi, an elite Lead AI Technical Interviewer conducting a live video interview for a ${context.experienceLevel} ${context.roleTitle}.
 Total duration: ${context.totalDurationMinutes} mins. Remaining: ${context.remainingMinutes} mins.
 Current phase: ${context.interviewStage}.
 
@@ -108,7 +108,7 @@ Instructions:
     } catch (err: any) {
       console.warn(`[OllamaAdapter] Request failed (${err.message}). Using fallback message.`);
       return {
-        content: `[Ollama Local Warning: Ensure \`ollama serve\` is active and \`${modelName}\` is downloaded.] Welcome to your ${context.roleTitle} interview. I am Ananya. Could you walk me through your engineering background and your core technical strengths?`,
+        content: `[Ollama Local Warning: Ensure \`ollama serve\` is active and \`${modelName}\` is downloaded.] Welcome to your ${context.roleTitle} interview. I am Arohi. Could you walk me through your engineering background and your core technical strengths?`,
         stageTransition: 'continue',
       };
     }

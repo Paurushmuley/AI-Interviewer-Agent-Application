@@ -167,17 +167,18 @@ The system provides two distinct local, zero-cost options:
 
 ### 3.8. Indian English Human Voice Synthesis & Avatar Persona
 To replace robotic speech with authentic, warm human cadence, the audio synthesis pipeline implements:
-1. **Locale & Voice Prioritization (`en-IN`)**:
-   - Matches neural/natural Indian voices: `Microsoft Neerja Online (Natural) - English (India)`, `Microsoft Prabhat Online (Natural) - English (India)`, `Google English (India)`, `Microsoft Heera / Ravi`, `Veena`, `Rishi`.
-   - Explicitly assigns `utterance.lang = 'en-IN'`.
+1. **Locale & Voice Prioritization (Default: Arohi)**:
+   - Sets **Arohi** (`Microsoft आरोही Online (Natural) - Marathi (India)` / `Aarohi` / `Arohi`) as the #1 default priority voice.
+   - Falls back gracefully to neural Indian voices: `Microsoft Neerja Online (Natural) - English (India)`, `Microsoft Prabhat Online (Natural) - English (India)`, `Google English (India)`, `Microsoft Heera / Ravi`, `Veena`, `Rishi`.
+   - Explicitly aligns `utterance.lang` to match the selected natural voice.
 2. **Text Sanitization (`cleanSpokenText`)**:
    - Strips markdown asterisks, backticks, headings, bullet points, and reasoning `<think>` tags before delivering text to the Web Speech synthesizer, preventing unnatural symbol pronunciation and pauses.
 3. **Conversational Cadence**:
    - Calibrated rate of `0.94` and pitch `1.0` for natural human pacing without mechanical rushing.
 4. **Interactive Voice Selector (`🇮🇳`)**:
-   - Session bar dropdown allowing candidates to select from detected voices with immediate speech confirmation.
+   - Session bar dropdown allowing candidates to select from detected voices with immediate speech confirmation, highlighting `⭐ 🇮🇳 Microsoft आरोही Online (Natural) (Default)`.
 5. **AI Interviewer Persona**:
-   - Avatar named **Ananya** (`Ananya (Lead Tech Interviewer • en-IN)`).
+   - Avatar named **Arohi** (`Arohi (Lead Tech Interviewer • Indian Voice)`).
    - System prompts across local and cloud engines instructed with warm, articulate Indian English phrasing ("Understood", "Right, could you walk me through...").
 
 ---
