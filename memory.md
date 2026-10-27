@@ -82,5 +82,7 @@
 ---
 
 ## 4. Current Status
-- **Current Status**: All core features implemented, verified, and build passing cleanly. Server running on port 5000.
-- **Ready for**: Local testing via http://localhost:5000 and production deployment to Vercel.
+- **Database**: Supabase PostgreSQL with pooled (`POSTGRES_PRISMA_URL` :6543) and direct migration (`POSTGRES_URL_NON_POOLING` :5432) connections via Prisma. Schema pushed and synced with all tables created.
+- **Git Repository**: Remote configured to `https://github.com/Paurushmuley/AI-Interviewer-Agent-Application.git` on branch `main`.
+- **Encryption**: AES-256-GCM authenticated cipher driven by `ENCRYPTION_MASTER_KEY`.
+- **Server**: Running locally on port 5000 (`http://localhost:5000`).

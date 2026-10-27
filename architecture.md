@@ -39,7 +39,9 @@ flowchart TD
     end
 
     subgraph DataTier ["Data Tier"]
-        PostgresDB[("PostgreSQL Database (Neon / Supabase / Vercel Postgres)")]
+        PostgresDB[("Supabase PostgreSQL Database")]
+        PrismaPooler["Prisma Runtime (POSTGRES_PRISMA_URL - Pooled :6543)"]
+        PrismaDirect["Prisma Migration Engine (POSTGRES_URL_NON_POOLING - Direct :5432)"]
     end
 
     subgraph ExternalLLM ["LLM Providers & Local Engines"]
