@@ -29,9 +29,10 @@
 2. **Hybrid NLP Engine**:
    - `src/lib/nlp/speech-analyzer.ts`: Real-time filler detection (*"um", "like", "you know"*), WPM calculation, hesitation markers, and confidence scoring (0-100%).
    - `src/lib/nlp/resume-parser.ts`: Heuristic and regex entity extraction (skills, projects, experience years, seniority) + JD alignment percentage.
-3. **Multi-LLM & Local Backend Sub-Agent (`src/lib/llm/`)**:
-   - `adapter.ts`: Unified router supporting OpenAI (`gpt-4o`), Gemini (`1.5-flash`), Groq (`llama-3.3-70b`), xAI Grok, Anthropic (`claude-3-5-sonnet`), and Local Sub-Agent.
-   - `local-subagent.ts`: Intelligent state machine + Ollama local model proxy (`llama3.2`) for offline, zero-cost development testing.
+3. **Multi-LLM & Local Engines (`src/lib/llm/`)**:
+   - `adapter.ts`: Unified router supporting Antigravity AI Sub-Agent, Local Ollama, and external BYOK providers (OpenAI, Gemini, Groq, xAI Grok, Anthropic).
+   - `antigravity-agent.ts`: Autonomous built-in Antigravity AI Sub-Agent (`AntigravityInterviewSubAgent`) assigned as lead interviewer in place of external LLMs (zero-cost, intelligent state machine, dynamic coding prompts, and evaluations).
+   - `ollama-adapter.ts`: Connects directly to local Ollama on `http://127.0.0.1:11434` with model selector (`llama3.2`, `deepseek-r1`, `mistral`) and live daemon ping.
 4. **Account Management & Authentication (`src/lib/auth.ts`, `src/app/api/auth/`)**:
    - Registration, login, JWT cookies, and password hashing with `bcryptjs`.
    - Dashboard with aggregate stats (average score, highest score, total practice minutes) and past interview logs.

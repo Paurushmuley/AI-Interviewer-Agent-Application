@@ -40,7 +40,8 @@ Key Requirements:
   const [uploadResult, setUploadResult] = useState<any | null>(null);
 
   // LLM Provider & BYOK State
-  const [provider, setProvider] = useState<'local' | 'openai' | 'gemini' | 'groq' | 'grok' | 'anthropic'>('local');
+  const [provider, setProvider] = useState<'antigravity' | 'ollama' | 'openai' | 'gemini' | 'groq' | 'grok' | 'anthropic'>('antigravity');
+  const [ollamaModel, setOllamaModel] = useState('llama3.2');
   const [apiKey, setApiKey] = useState('');
   const [verifyingKey, setVerifyingKey] = useState(false);
   const [keyVerificationMsg, setKeyVerificationMsg] = useState<{ valid: boolean; text: string } | null>(null);
@@ -95,9 +96,9 @@ Key Requirements:
     }
   };
 
-  // Test BYOK Key
+  // Test BYOK Key or Ollama Connection
   const handleVerifyKey = async () => {
-    if (!apiKey.trim()) return;
+    if (provider !== 'ollama' && provider !== 'antigravity' && !apiKey.trim()) return;
     setVerifyingKey(true);
     setKeyVerificationMsg(null);
 
@@ -125,8 +126,8 @@ Key Requirements:
     const effectiveDuration = customDuration ? parseInt(customDuration, 10) : targetDurationMinutes;
 
     try {
-      // If user supplied a new key, save it first
-      if (provider !== 'local' && apiKey.trim()) {
+      // If user supplied an external provider key, save it
+      if (provider !== 'antigravity' && provider !== 'ollama' && apiKey.trim()) {
         await fetch('/api/keys', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -147,6 +148,7 @@ Key Requirements:
           resumeFilename: uploadResult?.filename,
           parsedResume: uploadResult?.parsedResume,
           llmProvider: provider,
+          llmModel: provider === 'ollama' ? ollamaModel : undefined,
         }),
       });
 
@@ -344,9 +346,10 @@ Key Requirements:
             </span>
           </label>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
             {[
-              { id: 'local', name: 'Local Sub-Agent', tag: 'Zero-Cost / Dev' },
+              { id: 'antigravity', name: 'Antigravity Sub-Agent', tag: 'Assigned Agent • Free' },
+              { id: 'ollama', name: 'Local Ollama', tag: 'localhost:11434' },
               { id: 'openai', name: 'OpenAI (GPT-4o)', tag: 'BYOK' },
               { id: 'gemini', name: 'Google Gemini', tag: 'BYOK' },
               { id: 'groq', name: 'Groq (Llama-3.3)', tag: 'Ultra-Fast' },
@@ -356,7 +359,10 @@ Key Requirements:
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setProvider(item.id as any)}
+                onClick={() => {
+                  setProvider(item.id as any);
+                  setKeyVerificationMsg(null);
+                }}
                 className={`p-3 rounded-xl border text-left transition-all ${
                   provider === item.id
                     ? 'bg-blue-600/20 border-blue-500 text-white shadow-md'
@@ -369,8 +375,59 @@ Key Requirements:
             ))}
           </div>
 
-          {/* Key Input if external provider chosen */}
-          {provider !== 'local' && (
+          {/* Option 1: Antigravity Sub-Agent Banner */}
+          {provider === 'antigravity' && (
+            <div className="p-3.5 rounded-xl bg-blue-950/40 border border-blue-500/30 text-xs text-blue-200 flex items-start gap-2.5">
+              <Sparkles className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-white">Antigravity AI Sub-Agent Assigned as Lead Interviewer</p>
+                <p className="text-[11px] text-slate-300 mt-0.5">
+                  The Antigravity backend subagent conducts the full interview session, generates custom coding challenges matched to your JD, evaluates your answers, and scores your performance without requiring any external API key.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Option 2: Local Ollama Configuration */}
+          {provider === 'ollama' && (
+            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-slate-300">Local Ollama Model (http://127.0.0.1:11434):</span>
+                <span className="text-[11px] text-slate-500">Requires local `ollama serve`</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={ollamaModel}
+                  onChange={e => setOllamaModel(e.target.value)}
+                  placeholder="e.g. llama3.2, deepseek-r1, mistral"
+                  className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleVerifyKey}
+                  disabled={verifyingKey}
+                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold shrink-0"
+                >
+                  {verifyingKey ? 'Checking...' : 'Ping Ollama'}
+                </button>
+              </div>
+
+              {keyVerificationMsg && (
+                <div
+                  className={`text-xs p-2 rounded-lg ${
+                    keyVerificationMsg.valid ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'
+                  }`}
+                >
+                  {keyVerificationMsg.text}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Option 3: External BYOK Provider Key Input */}
+          {provider !== 'antigravity' && provider !== 'ollama' && (
             <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2 pt-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-slate-300">

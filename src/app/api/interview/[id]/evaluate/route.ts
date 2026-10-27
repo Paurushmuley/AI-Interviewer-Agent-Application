@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { LocalInterviewSubAgent } from '@/lib/llm/local-subagent';
+import { AntigravityInterviewSubAgent } from '@/lib/llm/antigravity-agent';
 
-const localAgent = new LocalInterviewSubAgent();
+const antigravityAgent = new AntigravityInterviewSubAgent();
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .filter((s): s is number => s !== null && s !== undefined);
 
     // Generate comprehensive evaluation
-    const reportData = await localAgent.generateEvaluationReport(
+    const reportData = await antigravityAgent.generateEvaluationReport(
       {
         roleTitle: interview.roleTitle,
         experienceLevel: interview.experienceLevel,

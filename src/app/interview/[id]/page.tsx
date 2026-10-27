@@ -284,7 +284,12 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
             {interview?.roleTitle}
           </span>
           <span className="text-xs text-slate-400 hidden sm:inline">
-            {interview?.experienceLevel} Level • Multi-LLM BYOK ({interview?.llmProvider?.toUpperCase()})
+            {interview?.experienceLevel} Level •{' '}
+            {interview?.llmProvider === 'antigravity' || interview?.llmProvider === 'local'
+              ? 'Antigravity AI Sub-Agent Assigned'
+              : interview?.llmProvider === 'ollama'
+              ? `Ollama Local (${interview?.llmModel || 'llama3.2'})`
+              : `Multi-LLM BYOK (${interview?.llmProvider?.toUpperCase()})`}
           </span>
         </div>
 
@@ -345,7 +350,13 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
               <AiAvatar
                 isSpeaking={isAiSpeaking}
                 isThinking={isAiThinking}
-                interviewerName="Sophia (Lead Tech Interviewer)"
+                interviewerName={
+                  interview?.llmProvider === 'antigravity' || interview?.llmProvider === 'local'
+                    ? 'Sophia (Antigravity AI Sub-Agent)'
+                    : interview?.llmProvider === 'ollama'
+                    ? `Sophia (Ollama • ${interview?.llmModel || 'Local Model'})`
+                    : `Sophia (${interview?.llmProvider?.toUpperCase()} • BYOK)`
+                }
               />
               <CandidateCam candidateName="You (Candidate)" isRecording={isRecording} />
             </div>

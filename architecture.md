@@ -42,7 +42,9 @@ flowchart TD
         PostgresDB[("PostgreSQL Database (Neon / Supabase / Vercel Postgres)")]
     end
 
-    subgraph ExternalLLM ["External LLM Providers (BYOK)"]
+    subgraph ExternalLLM ["LLM Providers & Local Engines"]
+        AntigravityAgent["Antigravity AI Sub-Agent (Autonomous Built-in Interviewer)"]
+        OllamaLocal["Local Ollama (localhost:11434 - Llama 3.2, DeepSeek)"]
         OpenAI["OpenAI API (GPT-4o / GPT-4o-mini)"]
         Gemini["Google Gemini (Gemini 1.5 Pro / Flash)"]
         Groq["Groq / Grok (xAI Grok / Llama-3.3-70b on Groq)"]
@@ -148,11 +150,16 @@ flowchart TD
 
 ---
 
-### 3.7. Local Testing Backend Sub-Agent (Dev / Simulation Mode)
-- Built-in **Local Mock Sub-Agent (`LocalInterviewAgent`)**:
-  - Implements the exact same interface as the external LLM providers.
-  - Can run deterministic rule-based mock interviews, or connect to local models (e.g. Ollama `llama3.2` / `deepseek-r1` via `http://localhost:11434`).
-  - Simulates candidate speech streams, filler word extraction, and generates mock scorecards and code evaluations.
+### 3.7. Local Engines: Antigravity Sub-Agent vs. Ollama
+The system provides two distinct local, zero-cost options:
+1. **Antigravity AI Sub-Agent (`AntigravityInterviewSubAgent`)**:
+   - Built-in autonomous backend agent assigned directly as Lead Technical Interviewer.
+   - Operates in place of external LLMs without requiring any API keys.
+   - Drives multi-stage conversational state transitions, dynamic JD-resume gap analysis, live coding challenge assignment, code review, and post-interview synthesis.
+2. **Local Ollama Runtime (`OllamaAdapter`)**:
+   - Connects directly to local Ollama daemon on `http://127.0.0.1:11434`.
+   - Supports local models (e.g. `llama3.2`, `deepseek-r1:1.5b`, `mistral`, `qwen2.5`).
+   - Built-in ping/health-check verifying daemon reachability and available models.
 
 ---
 

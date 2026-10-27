@@ -3,12 +3,17 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { generateText } from 'ai';
 import { LLMProvider, ChatMessage, InterviewTurnContext, LLMResponse } from './types';
-import { LocalInterviewSubAgent } from './local-subagent';
+import { AntigravityInterviewSubAgent } from './antigravity-agent';
+import { OllamaAdapter } from './ollama-adapter';
 
-const localAgent = new LocalInterviewSubAgent();
+const antigravityAgent = new AntigravityInterviewSubAgent();
+const ollamaAdapter = new OllamaAdapter();
 
 /**
- * Unified Multi-LLM Adapter with Bring-Your-Own-Key (BYOK) support.
+ * Unified Multi-LLM Adapter supporting:
+ *  - Antigravity AI Sub-Agent (Built-in autonomous backend agent)
+ *  - Ollama Local LLM (localhost:11434)
+ *  - External BYOK Providers (OpenAI, Gemini, Groq, xAI Grok, Anthropic)
  */
 export class UnifiedLLMAdapter {
   /**
@@ -21,26 +26,36 @@ export class UnifiedLLMAdapter {
     context: InterviewTurnContext,
     modelName?: string
   ): Promise<LLMResponse> {
-    // If provider is local or no key is provided, delegate to the backend Local Sub-Agent
-    if (provider === 'local' || !apiKey) {
-      return localAgent.generateInterviewTurn(messages, context);
+    // 1. Antigravity AI Sub-Agent (Built-in)
+    if (provider === 'antigravity' || provider === 'local') {
+      return antigravityAgent.generateInterviewTurn(messages, context);
     }
 
-    const systemPrompt = `You are a world-class, realistic Technical Interviewer evaluating a candidate for the position of "${context.roleTitle}" (${context.experienceLevel} level).
-Interview Duration: ${context.totalDurationMinutes} minutes. Remaining time: ${context.remainingMinutes} minutes.
-Current Interview Phase: ${context.interviewStage}.
+    // 2. Ollama Local Model
+    if (provider === 'ollama') {
+      return ollamaAdapter.generateInterviewTurn(messages, context, modelName || 'llama3.2');
+    }
+
+    // If external provider selected but no key supplied, assign Antigravity Sub-Agent as fallback
+    if (!apiKey) {
+      return antigravityAgent.generateInterviewTurn(messages, context);
+    }
+
+    const systemPrompt = `You are an elite, realistic Technical Interviewer evaluating a candidate for "${context.roleTitle}" (${context.experienceLevel} level).
+Interview Duration: ${context.totalDurationMinutes} mins. Remaining: ${context.remainingMinutes} mins.
+Current Phase: ${context.interviewStage}.
 
 Candidate Background:
 - Matched Skills: ${context.matchedSkills.join(', ') || 'N/A'}
-- Areas to probe: ${context.missingSkills.join(', ') || 'General architecture & problem solving'}
+- Areas to probe: ${context.missingSkills.join(', ') || 'System design & coding'}
 - Recent NLP Speaking Confidence: ${context.lastCandidateMetrics?.confidenceScore ?? 75}/100
 
 Guidelines:
 1. Speak conversationally as a human interviewer on a live video call.
 2. Keep questions concise (2-4 sentences max). Never output long lecture paragraphs.
 3. If candidate answers vaguely, drill down into implementation details, tradeoffs, and failure modes.
-4. If in "coding_challenge" stage and no coding problem was issued yet, propose a clear coding problem.
-5. If remaining time is <= 3 minutes, begin the wrap-up phase and ask if candidate has any questions.`;
+4. If in "coding_challenge" stage, propose a clear coding problem.
+5. If remaining time is <= 3 minutes, begin the wrap-up phase.`;
 
     try {
       let responseText = '';
@@ -64,11 +79,7 @@ Guidelines:
         });
         responseText = result.text;
       } else if (provider === 'groq') {
-        // Groq uses OpenAI-compatible standard
-        const groq = createOpenAI({
-          apiKey,
-          baseURL: 'https://api.groq.com/openai/v1',
-        });
+        const groq = createOpenAI({ apiKey, baseURL: 'https://api.groq.com/openai/v1' });
         const result = await generateText({
           model: groq(modelName || 'llama-3.3-70b-versatile'),
           system: systemPrompt,
@@ -77,11 +88,7 @@ Guidelines:
         });
         responseText = result.text;
       } else if (provider === 'grok') {
-        // xAI Grok uses OpenAI-compatible standard
-        const grok = createOpenAI({
-          apiKey,
-          baseURL: 'https://api.x.ai/v1',
-        });
+        const grok = createOpenAI({ apiKey, baseURL: 'https://api.x.ai/v1' });
         const result = await generateText({
           model: grok(modelName || 'grok-2-latest'),
           system: systemPrompt,
@@ -105,54 +112,56 @@ Guidelines:
         stageTransition: context.remainingMinutes <= 3 ? 'wrap_up' : 'continue',
       };
     } catch (err) {
-      console.error(`[UnifiedLLMAdapter] Error with provider ${provider}, falling back to Local Sub-Agent:`, err);
-      return localAgent.generateInterviewTurn(messages, context);
+      console.error(`[UnifiedLLMAdapter] Error with provider ${provider}, assigning Antigravity Sub-Agent fallback:`, err);
+      return antigravityAgent.generateInterviewTurn(messages, context);
     }
   }
 
   /**
-   * Validates if a user-supplied API key is working.
+   * Validates if provider is reachable or key is valid.
    */
-  static async verifyKey(provider: LLMProvider, apiKey: string): Promise<{ valid: boolean; message: string }> {
-    if (!apiKey) return { valid: false, message: 'API key is empty.' };
-    if (provider === 'local') return { valid: true, message: 'Local agent is always active.' };
+  static async verifyKey(
+    provider: LLMProvider,
+    apiKey?: string
+  ): Promise<{ valid: boolean; message: string; models?: string[] }> {
+    // Antigravity AI Sub-Agent
+    if (provider === 'antigravity' || provider === 'local') {
+      return {
+        valid: true,
+        message: 'Antigravity AI Sub-Agent is assigned and ready as Lead Interviewer.',
+      };
+    }
+
+    // Local Ollama
+    if (provider === 'ollama') {
+      const pingRes = await ollamaAdapter.ping();
+      return {
+        valid: pingRes.online,
+        message: pingRes.message,
+        models: pingRes.models,
+      };
+    }
+
+    if (!apiKey) {
+      return { valid: false, message: 'API key cannot be empty.' };
+    }
 
     try {
       if (provider === 'openai') {
         const openai = createOpenAI({ apiKey });
-        await generateText({
-          model: openai('gpt-4o-mini'),
-          prompt: 'ping',
-          maxTokens: 5,
-        });
+        await generateText({ model: openai('gpt-4o-mini'), prompt: 'ping', maxTokens: 5 });
       } else if (provider === 'gemini') {
         const google = createGoogleGenerativeAI({ apiKey });
-        await generateText({
-          model: google('gemini-1.5-flash'),
-          prompt: 'ping',
-          maxTokens: 5,
-        });
+        await generateText({ model: google('gemini-1.5-flash'), prompt: 'ping', maxTokens: 5 });
       } else if (provider === 'groq') {
         const groq = createOpenAI({ apiKey, baseURL: 'https://api.groq.com/openai/v1' });
-        await generateText({
-          model: groq('llama-3.3-70b-versatile'),
-          prompt: 'ping',
-          maxTokens: 5,
-        });
+        await generateText({ model: groq('llama-3.3-70b-versatile'), prompt: 'ping', maxTokens: 5 });
       } else if (provider === 'grok') {
         const grok = createOpenAI({ apiKey, baseURL: 'https://api.x.ai/v1' });
-        await generateText({
-          model: grok('grok-2-latest'),
-          prompt: 'ping',
-          maxTokens: 5,
-        });
+        await generateText({ model: grok('grok-2-latest'), prompt: 'ping', maxTokens: 5 });
       } else if (provider === 'anthropic') {
         const anthropic = createAnthropic({ apiKey });
-        await generateText({
-          model: anthropic('claude-3-5-haiku-20241022'),
-          prompt: 'ping',
-          maxTokens: 5,
-        });
+        await generateText({ model: anthropic('claude-3-5-haiku-20241022'), prompt: 'ping', maxTokens: 5 });
       }
 
       return { valid: true, message: `${provider.toUpperCase()} API key verified successfully!` };
@@ -162,7 +171,7 @@ Guidelines:
   }
 
   /**
-   * Code evaluation delegation (either provider LLM or local sub-agent)
+   * Evaluates code submission via chosen provider or Antigravity Sub-Agent.
    */
   static async evaluateCode(
     provider: LLMProvider,
@@ -172,27 +181,24 @@ Guidelines:
     code: string,
     language: string
   ) {
-    if (provider === 'local' || !apiKey) {
-      return localAgent.evaluateCodeSubmission(problemTitle, problemStatement, code, language);
+    if (provider === 'antigravity' || provider === 'local' || provider === 'ollama' || !apiKey) {
+      return antigravityAgent.evaluateCodeSubmission(problemTitle, problemStatement, code, language);
     }
 
     try {
-      const prompt = `You are evaluating a candidate's code submission in a live technical interview.
-Problem: ${problemTitle}
-Problem Description: ${problemStatement}
+      const prompt = `Evaluate candidate's code submission for problem "${problemTitle}".
+Description: ${problemStatement}
 Language: ${language}
-Submitted Code:
+Code:
 \`\`\`${language}
 ${code}
 \`\`\`
 
-Return a JSON object in this exact format:
+Return JSON in this format:
 {
-  "score": <number between 0 and 100>,
-  "feedback": "<concise actionable critique>",
-  "testResults": [
-    { "passed": true/false, "note": "<test case or requirement description>" }
-  ]
+  "score": <0-100>,
+  "feedback": "<concise actionable review>",
+  "testResults": [{ "passed": boolean, "note": "<test description>" }]
 }`;
 
       let text = '';
@@ -205,13 +211,13 @@ Return a JSON object in this exact format:
         const res = await generateText({ model: google('gemini-1.5-flash'), prompt });
         text = res.text;
       } else {
-        return localAgent.evaluateCodeSubmission(problemTitle, problemStatement, code, language);
+        return antigravityAgent.evaluateCodeSubmission(problemTitle, problemStatement, code, language);
       }
 
       const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
       return JSON.parse(cleanJson);
     } catch {
-      return localAgent.evaluateCodeSubmission(problemTitle, problemStatement, code, language);
+      return antigravityAgent.evaluateCodeSubmission(problemTitle, problemStatement, code, language);
     }
   }
 }

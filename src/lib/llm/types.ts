@@ -1,4 +1,12 @@
-export type LLMProvider = 'local' | 'openai' | 'gemini' | 'groq' | 'grok' | 'anthropic';
+export type LLMProvider =
+  | 'antigravity'
+  | 'ollama'
+  | 'openai'
+  | 'gemini'
+  | 'groq'
+  | 'grok'
+  | 'anthropic'
+  | 'local'; // Backward compatibility alias for antigravity
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';

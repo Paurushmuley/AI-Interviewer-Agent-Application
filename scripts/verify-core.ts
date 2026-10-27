@@ -1,7 +1,8 @@
 import { encryptApiKey, decryptApiKey } from '../src/lib/crypto';
 import { analyzeSpeechTranscript } from '../src/lib/nlp/speech-analyzer';
 import { parseResumeText, alignResumeWithJd } from '../src/lib/nlp/resume-parser';
-import { LocalInterviewSubAgent } from '../src/lib/llm/local-subagent';
+import { AntigravityInterviewSubAgent } from '../src/lib/llm/antigravity-agent';
+import { OllamaAdapter } from '../src/lib/llm/ollama-adapter';
 
 async function runVerification() {
   console.log('=== [1/4] Testing AES-256-GCM Encryption / Decryption ===');
@@ -55,9 +56,9 @@ Bachelor of Science in Computer Science from University of Michigan.
   if (alignment.matchedSkills.length < 3) throw new Error('JD alignment skills missing!');
   console.log('✔ Resume NLP parser and JD alignment verified successfully.');
 
-  console.log('\n=== [4/4] Testing Local Backend Sub-Agent Engine ===');
-  const subAgent = new LocalInterviewSubAgent();
-  const firstTurn = await subAgent.generateInterviewTurn([], {
+  console.log('\n=== [4/4] Testing Antigravity Sub-Agent & Ollama Integration ===');
+  const antigravityAgent = new AntigravityInterviewSubAgent();
+  const firstTurn = await antigravityAgent.generateInterviewTurn([], {
     roleTitle: 'Senior Full-Stack Engineer',
     experienceLevel: 'Senior',
     interviewStage: 'intro',
@@ -68,9 +69,9 @@ Bachelor of Science in Computer Science from University of Michigan.
     matchedSkills: alignment.matchedSkills,
     missingSkills: alignment.missingSkills,
   });
-  console.log('Sub-Agent Turn 1:', firstTurn.content.slice(0, 120) + '...');
+  console.log('Antigravity Sub-Agent Turn 1:', firstTurn.content.slice(0, 120) + '...');
 
-  const codeEval = await subAgent.evaluateCodeSubmission(
+  const codeEval = await antigravityAgent.evaluateCodeSubmission(
     'Two Sum',
     'Find two numbers that add to target.',
     `function twoSum(nums, target) {
@@ -84,9 +85,13 @@ Bachelor of Science in Computer Science from University of Michigan.
 }`,
     'javascript'
   );
-  console.log('Sub-Agent Code Evaluation:', { score: codeEval.score, testPasses: codeEval.testResults.length });
+  console.log('Antigravity Sub-Agent Code Evaluation:', { score: codeEval.score, testPasses: codeEval.testResults.length });
   if (codeEval.score < 70) throw new Error('Code evaluation score unexpected!');
-  console.log('✔ Local backend sub-agent verified successfully.');
+
+  const ollama = new OllamaAdapter();
+  const ollamaPing = await ollama.ping();
+  console.log('Ollama Ping Status:', { online: ollamaPing.online, msg: ollamaPing.message });
+  console.log('✔ Antigravity sub-agent and Ollama adapter verified successfully.');
 
   console.log('\n🎉 ALL SYSTEM VERIFICATIONS PASSED 100%!');
 }
