@@ -81,5 +81,5 @@
 ---
 
 ## 4. Current Status
-- **Current Status**: All core features implemented, verified, and build passing cleanly.
-- **Ready for**: Local testing with `npm run dev` and production deployment to Vercel.
+- **Current Status**: All core features implemented, verified, and build passing cleanly. Server running on port 5000.
+- **Ready for**: Local testing via http://localhost:5000 and production deployment to Vercel.
