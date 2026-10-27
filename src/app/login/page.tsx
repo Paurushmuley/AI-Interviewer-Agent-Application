@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LogIn, Mail, Lock, AlertCircle, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react';
@@ -12,6 +12,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLocalEnv, setIsLocalEnv] = useState(false);
+
+  useEffect(() => {
+    // Only surface dev testing credentials on local development environments
+    if (typeof window !== 'undefined') {
+      const isLocalHost =
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.endsWith('.local');
+      setIsLocalEnv(isLocalHost && process.env.NODE_ENV !== 'production');
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,20 +69,22 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Quick Fill Dev Account Banner */}
-        <div className="mb-6 p-3 rounded-xl bg-blue-950/30 border border-blue-500/20 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2 text-blue-300">
-            <Sparkles className="w-4 h-4 text-blue-400 shrink-0" />
-            <span>Dev Testing Account Ready</span>
+        {/* Quick Fill Dev Account Banner (Local Development Only) */}
+        {isLocalEnv && (
+          <div className="mb-6 p-3 rounded-xl bg-blue-950/30 border border-blue-500/20 flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2 text-blue-300">
+              <Sparkles className="w-4 h-4 text-blue-400 shrink-0" />
+              <span>Dev Testing Account (Local Only)</span>
+            </div>
+            <button
+              type="button"
+              onClick={fillDevAccount}
+              className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-[11px] transition-colors"
+            >
+              Auto-fill
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={fillDevAccount}
-            className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-[11px] transition-colors"
-          >
-            Auto-fill
-          </button>
-        </div>
+        )}
 
         {error && (
           <div className="p-3 mb-6 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
