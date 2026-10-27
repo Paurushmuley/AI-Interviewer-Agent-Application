@@ -1,0 +1,113 @@
+// Prisma Schema for AI Interviewer Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  apiKeys      UserApiKey[]
+  interviews   Interview[]
+}
+
+model UserApiKey {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider     String   // openai, gemini, groq, grok, anthropic
+  encryptedKey String
+  iv           String
+  tag          String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, provider])
+}
+
+model Interview {
+  id                    String              @id @default(uuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleTitle             String
+  jobDescription        String              @db.Text
+  targetDurationMinutes Int                 @default(30)
+  actualDurationSeconds Int?                @default(0)
+  experienceLevel       String              @default("Mid") // Entry, Mid, Senior, Lead
+  interviewType         String              @default("full_loop") // technical, coding, behavioral, full_loop
+  resumeBlobUrl         String?
+  resumeFilename        String?
+  parsedResume          Json?
+  llmProvider           String              @default("local") // local, openai, gemini, groq, grok, anthropic
+  llmModel              String?
+  status                String              @default("setup") // setup, in_progress, completed, aborted
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  rounds                InterviewRound[]
+  messages              TranscriptMessage[]
+  codingSubmissions     CodingSubmission[]
+  evaluation            EvaluationReport?
+}
+
+model InterviewRound {
+  id          String    @id @default(uuid())
+  interviewId String
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  roundType   String    // intro, experience_deepdive, coding_challenge, system_design, behavioral, candidate_qa
+  roundOrder  Int
+  status      String    @default("pending") // pending, active, completed
+  createdAt   DateTime  @default(now())
+}
+
+model CodingSubmission {
+  id               String    @id @default(uuid())
+  interviewId      String
+  interview        Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  language         String    @default("javascript")
+  problemTitle     String
+  problemStatement String    @db.Text
+  starterCode      String?   @db.Text
+  submittedCode    String    @db.Text
+  testResults      Json?
+  score            Int?      @default(0)
+  feedback         String?   @db.Text
+  createdAt        DateTime  @default(now())
+}
+
+model TranscriptMessage {
+  id          String    @id @default(uuid())
+  interviewId String
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  roundId     String?
+  sender      String    // agent, candidate, system
+  content     String    @db.Text
+  nlpMetrics  Json?     // { fillerCount: 2, wpm: 135, sentiment: "positive", confidence: 85 }
+  timestamp   DateTime  @default(now())
+}
+
+model EvaluationReport {
+  id                 String    @id @default(uuid())
+  interviewId        String    @unique
+  interview          Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  overallScore       Int       // 0 - 100
+  technicalScore     Int?
+  codingScore        Int?
+  communicationScore Int?
+  confidenceScore    Int?
+  categoryScores     Json?     // detailed breakdown
+  strengths          String    @db.Text
+  improvements       String    @db.Text
+  detailedFeedback   String    @db.Text
+  createdAt          DateTime  @default(now())
+}
