@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Bot,
   Zap,
+  Info,
 } from 'lucide-react';
 
 export default function InterviewSetupPage() {
@@ -50,8 +51,21 @@ Key Requirements:
   const [user, setUser] = useState<any | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLocalEnv, setIsLocalEnv] = useState(true);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isLocal =
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.endsWith('.local');
+      setIsLocalEnv(isLocal);
+      // On deployed environments, default away from local-only options to an external BYOK provider
+      if (!isLocal) {
+        setProvider('openai');
+      }
+    }
+
     async function checkAuth() {
       try {
         const res = await fetch('/api/auth/me');
@@ -348,32 +362,67 @@ Key Requirements:
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
             {[
-              { id: 'antigravity', name: 'Antigravity Sub-Agent', tag: 'Assigned Agent • Free' },
-              { id: 'ollama', name: 'Local Ollama', tag: 'localhost:11434' },
-              { id: 'openai', name: 'OpenAI (GPT-4o)', tag: 'BYOK' },
-              { id: 'gemini', name: 'Google Gemini', tag: 'BYOK' },
-              { id: 'groq', name: 'Groq (Llama-3.3)', tag: 'Ultra-Fast' },
-              { id: 'grok', name: 'xAI Grok', tag: 'BYOK' },
-              { id: 'anthropic', name: 'Anthropic Claude', tag: 'BYOK' },
-            ].map(item => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  setProvider(item.id as any);
-                  setKeyVerificationMsg(null);
-                }}
-                className={`p-3 rounded-xl border text-left transition-all ${
-                  provider === item.id
-                    ? 'bg-blue-600/20 border-blue-500 text-white shadow-md'
-                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                <div className="text-xs font-bold text-slate-100">{item.name}</div>
-                <div className="text-[10px] text-blue-400 mt-0.5">{item.tag}</div>
-              </button>
-            ))}
+              { id: 'antigravity', name: 'Antigravity Sub-Agent', tag: isLocalEnv ? 'Assigned Agent • Free' : 'Local Only', isLocalOnly: true },
+              { id: 'ollama', name: 'Local Ollama', tag: isLocalEnv ? 'localhost:11434' : 'Local Only', isLocalOnly: true },
+              { id: 'openai', name: 'OpenAI (GPT-4o)', tag: 'BYOK', isLocalOnly: false },
+              { id: 'gemini', name: 'Google Gemini', tag: 'BYOK', isLocalOnly: false },
+              { id: 'groq', name: 'Groq (Llama-3.3)', tag: 'Ultra-Fast', isLocalOnly: false },
+              { id: 'grok', name: 'xAI Grok', tag: 'BYOK', isLocalOnly: false },
+              { id: 'anthropic', name: 'Anthropic Claude', tag: 'BYOK', isLocalOnly: false },
+            ].map(item => {
+              const isDisabled = item.isLocalOnly && !isLocalEnv;
+              return (
+                <div key={item.id} className="relative group">
+                  <button
+                    type="button"
+                    disabled={isDisabled}
+                    onClick={() => {
+                      if (isDisabled) return;
+                      setProvider(item.id as any);
+                      setKeyVerificationMsg(null);
+                    }}
+                    title={
+                      isDisabled
+                        ? 'Local option only: You need to clone the repository and run locally to use Antigravity Sub-Agent or Ollama.'
+                        : undefined
+                    }
+                    className={`w-full p-3 rounded-xl border text-left transition-all ${
+                      isDisabled
+                        ? 'opacity-50 cursor-not-allowed bg-slate-950/40 border-slate-800/60'
+                        : provider === item.id
+                        ? 'bg-blue-600/20 border-blue-500 text-white shadow-md'
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="text-xs font-bold text-slate-100 flex items-center justify-between">
+                      <span>{item.name}</span>
+                      {isDisabled && <span className="text-[9px] text-amber-400/90 font-normal">Disabled</span>}
+                    </div>
+                    <div className={`text-[10px] mt-0.5 ${isDisabled ? 'text-slate-500' : 'text-blue-400'}`}>
+                      {item.tag}
+                    </div>
+                  </button>
+
+                  {/* Tooltip on hover when disabled */}
+                  {isDisabled && (
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 rounded-lg bg-slate-900 border border-slate-700 text-[10px] text-slate-200 shadow-xl z-20 pointer-events-none text-center">
+                      Clone the repo to use {item.name} locally.
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
+
+          {/* Deployed Notice Banner */}
+          {!isLocalEnv && (
+            <div className="p-3 rounded-xl bg-slate-950 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-2">
+              <Info className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+              <div className="text-[11px] leading-relaxed">
+                <strong>Running on Deployed Environment:</strong> Antigravity AI Sub-Agent and Local Ollama are local-only engines. Please select an external BYOK provider (OpenAI, Gemini, Groq, xAI Grok, Anthropic), or clone the repository to run Antigravity and Ollama on your local machine.
+              </div>
+            </div>
+          )}
 
           {/* Option 1: Antigravity Sub-Agent Banner */}
           {provider === 'antigravity' && (
