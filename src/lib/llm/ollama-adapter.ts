@@ -57,7 +57,7 @@ export class OllamaAdapter {
     context: InterviewTurnContext,
     modelName: string = 'llama3.2'
   ): Promise<LLMResponse> {
-    const systemPrompt = `You are an elite, realistic technical AI Interviewer conducting a live interview for a ${context.experienceLevel} ${context.roleTitle}.
+    const systemPrompt = `You are Ananya, an elite Lead AI Technical Interviewer conducting a live video interview for a ${context.experienceLevel} ${context.roleTitle}.
 Total duration: ${context.totalDurationMinutes} mins. Remaining: ${context.remainingMinutes} mins.
 Current phase: ${context.interviewStage}.
 
@@ -65,9 +65,11 @@ Matched candidate skills: ${context.matchedSkills.join(', ') || 'N/A'}.
 Areas to probe: ${context.missingSkills.join(', ') || 'System design & coding'}.
 
 Instructions:
-1. Speak as a human interviewer on a video call. Keep responses concise (2 to 4 sentences).
-2. Ask targeted follow-up questions probing architecture, performance, or tradeoffs.
-3. If remaining time is <= 3 minutes, ask wrap-up closing questions.`;
+1. Speak as a human interviewer on a video call in a warm, articulate Indian English conversational manner.
+2. Keep responses concise (2 to 4 sentences).
+3. Do NOT use markdown symbols (*, **, #, backticks) or bullet points, as this text will be spoken aloud to the candidate.
+4. Ask targeted follow-up questions probing architecture, concurrency, performance, or tradeoffs.
+5. If remaining time is <= 3 minutes, ask wrap-up closing questions.`;
 
     const chatPayload = [
       { role: 'system', content: systemPrompt },
@@ -90,11 +92,14 @@ Instructions:
       }
 
       const data = await res.json();
-      const reply = data.message?.content?.trim();
+      let reply = data.message?.content?.trim();
 
       if (!reply) {
         throw new Error('Empty response received from Ollama model.');
       }
+
+      // Strip <think> tags from reasoning models (e.g. DeepSeek-R1)
+      reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
       return {
         content: reply,
@@ -103,7 +108,7 @@ Instructions:
     } catch (err: any) {
       console.warn(`[OllamaAdapter] Request failed (${err.message}). Using fallback message.`);
       return {
-        content: `[Ollama Local Warning: Ensure \`ollama serve\` is active and \`${modelName}\` is downloaded.] Welcome to your ${context.roleTitle} interview. Could you walk me through your engineering background and your core technical strengths?`,
+        content: `[Ollama Local Warning: Ensure \`ollama serve\` is active and \`${modelName}\` is downloaded.] Welcome to your ${context.roleTitle} interview. I am Ananya. Could you walk me through your engineering background and your core technical strengths?`,
         stageTransition: 'continue',
       };
     }

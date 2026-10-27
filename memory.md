@@ -90,3 +90,11 @@
 - **Git Repository**: Pushed and synced to `https://github.com/Paurushmuley/AI-Interviewer-Agent-Application.git` on branch `main`.
 - **Encryption**: AES-256-GCM authenticated cipher driven by `ENCRYPTION_MASTER_KEY`.
 - **Server**: Running locally on port 5000 (`http://localhost:5000`).
+- **Indian English Human Accent (`en-IN`)**:
+  - Lead AI Interviewer Avatar configured as **Ananya** (`Ananya (Lead Tech Interviewer • en-IN)`).
+  - Speech synthesis prioritizes Natural/Neural Indian English voices (`Microsoft Neerja Online (Natural) - English (India)`, `Microsoft Prabhat Online (Natural) - English (India)`, `Google English (India)`, `Microsoft Heera / Ravi`, `Veena`, `Rishi`).
+  - Added speech text sanitizer (`cleanSpokenText`) stripping markdown symbols, asterisks, bullet points, and `<think>` reasoning tags to eliminate robotic cadence and stuttering.
+  - Human conversational cadence calibrated at `rate: 0.94` and `utterance.lang = 'en-IN'`.
+  - Added interactive Indian English voice selector dropdown (`🇮🇳`) in the top session bar with instantaneous audio preview on voice switch.
+  - Added one-click audio replay button on interviewer transcript messages.
+  - Updated system prompts across Antigravity Sub-Agent, Ollama Adapter, and BYOK Unified Adapter for warm, articulate Indian English dialogue.

@@ -13,7 +13,7 @@ interface AiAvatarProps {
 export const AiAvatar: React.FC<AiAvatarProps> = ({
   isSpeaking,
   isThinking,
-  interviewerName = 'Sophia (Lead Tech Interviewer)',
+  interviewerName = 'Ananya (Lead Tech Interviewer • en-IN)',
 }) => {
   const [mouthOpen, setMouthOpen] = useState(0); // 0 to 1
   const [blink, setBlink] = useState(false);
@@ -189,7 +189,7 @@ export const AiAvatar: React.FC<AiAvatarProps> = ({
           <Bot className="w-4 h-4 text-blue-400" />
           {interviewerName}
         </h4>
-        <p className="text-xs text-slate-400 mt-0.5">AI Interview Specialist • Adaptive NLP + LLM</p>
+        <p className="text-xs text-slate-400 mt-0.5">AI Interview Specialist • Indian English Voice (en-IN)</p>
       </div>
     </div>
   );

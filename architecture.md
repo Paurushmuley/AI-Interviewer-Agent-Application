@@ -136,7 +136,7 @@ flowchart TD
 | **Real-Time Speech NLP** | `compromise`, custom speech analytics | Calculates filler word count (*"um", "like", "you know"*), speech rate (words per minute), speaking-to-listening ratio, confidence markers. |
 | **Semantic Matching** | Cosine similarity / embeddings / token overlap | Checks if candidate's response addressed key technical concepts from the JD before triggering LLM follow-ups. |
 | **Dynamic Interviewer LLM** | Unified LLM abstraction layer | Formulates contextual questions, challenges claims from the resume, adapts difficulty, and avoids scripted loops. |
-| **Text-to-Speech (TTS)** | Web Speech Synthesis / ElevenLabs / OpenAI TTS | Natural human-like audio delivery driving avatar lip sync. |
+| **Text-to-Speech (TTS)** | Web Speech Synthesis (`en-IN` prioritized) | Authentic Indian English human voice delivery (`Microsoft Neerja Online Natural`, `Prabhat`, `Google English India`) driving avatar lip sync. |
 | **Post-Interview Rubric** | LLM + NLP Evaluation Engine | Multidimensional scorecard (Technical Accuracy, Coding Performance, Relevance, Communication, Confidence, JD fit). |
 
 ---
@@ -165,7 +165,24 @@ The system provides two distinct local, zero-cost options:
 
 ---
 
-### 3.8. Database Schema Design (PostgreSQL)
+### 3.8. Indian English Human Voice Synthesis & Avatar Persona
+To replace robotic speech with authentic, warm human cadence, the audio synthesis pipeline implements:
+1. **Locale & Voice Prioritization (`en-IN`)**:
+   - Matches neural/natural Indian voices: `Microsoft Neerja Online (Natural) - English (India)`, `Microsoft Prabhat Online (Natural) - English (India)`, `Google English (India)`, `Microsoft Heera / Ravi`, `Veena`, `Rishi`.
+   - Explicitly assigns `utterance.lang = 'en-IN'`.
+2. **Text Sanitization (`cleanSpokenText`)**:
+   - Strips markdown asterisks, backticks, headings, bullet points, and reasoning `<think>` tags before delivering text to the Web Speech synthesizer, preventing unnatural symbol pronunciation and pauses.
+3. **Conversational Cadence**:
+   - Calibrated rate of `0.94` and pitch `1.0` for natural human pacing without mechanical rushing.
+4. **Interactive Voice Selector (`🇮🇳`)**:
+   - Session bar dropdown allowing candidates to select from detected voices with immediate speech confirmation.
+5. **AI Interviewer Persona**:
+   - Avatar named **Ananya** (`Ananya (Lead Tech Interviewer • en-IN)`).
+   - System prompts across local and cloud engines instructed with warm, articulate Indian English phrasing ("Understood", "Right, could you walk me through...").
+
+---
+
+### 3.9. Database Schema Design (PostgreSQL)
 
 ```mermaid
 erDiagram

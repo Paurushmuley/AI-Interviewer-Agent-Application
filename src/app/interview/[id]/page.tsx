@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   StopCircle,
   Volume2,
+  Languages,
 } from 'lucide-react';
 import { AiAvatar } from '@/components/avatar/AiAvatar';
 import { CandidateCam } from '@/components/camera/CandidateCam';
@@ -46,6 +47,75 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   // Coding Workspace State
   const [activeTab, setActiveTab] = useState<'video' | 'coding'>('video');
   const [codingChallenge, setCodingChallenge] = useState<any | null>(null);
+
+  // Voice & Speech synthesis state
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+
+  // Helper to prioritize natural Indian English voices
+  const findIndianVoice = (voiceList: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null => {
+    if (!voiceList || voiceList.length === 0) return null;
+
+    // 1. Natural / Neural Indian English (Microsoft Edge / Windows Online Natural)
+    const naturalIndian = voiceList.find(
+      v =>
+        (v.lang.toLowerCase() === 'en-in' || v.lang.toLowerCase().replace('_', '-') === 'en-in' || v.name.toLowerCase().includes('india')) &&
+        (v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('online'))
+    );
+    if (naturalIndian) return naturalIndian;
+
+    // 2. Renowned Indian Voice names: Neerja, Prabhat, Heera, Ravi
+    const namedIndian = voiceList.find(
+      v =>
+        v.name.toLowerCase().includes('neerja') ||
+        v.name.toLowerCase().includes('prabhat') ||
+        v.name.toLowerCase().includes('heera') ||
+        v.name.toLowerCase().includes('ravi')
+    );
+    if (namedIndian) return namedIndian;
+
+    // 3. Any English (India) voice (Google English India, etc.)
+    const anyIndian = voiceList.find(
+      v =>
+        v.lang.toLowerCase() === 'en-in' ||
+        v.lang.toLowerCase().replace('_', '-') === 'en-in' ||
+        v.name.toLowerCase().includes('india') ||
+        v.name.toLowerCase().includes('hindi')
+    );
+    if (anyIndian) return anyIndian;
+
+    // 4. Fallback to any Natural English voice
+    return (
+      voiceList.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Online'))) ||
+      voiceList.find(v => v.lang.startsWith('en')) ||
+      voiceList[0]
+    );
+  };
+
+  // Cache browser voices and auto-select Indian English on mount
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+
+    const populateVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices && voices.length > 0) {
+        setAvailableVoices(voices);
+        const bestVoice = findIndianVoice(voices);
+        if (bestVoice) {
+          setSelectedVoice(bestVoice);
+        }
+      }
+    };
+
+    populateVoices();
+    window.speechSynthesis.onvoiceschanged = populateVoices;
+
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
+    };
+  }, []);
 
   // Speech Recognition ref
   const recognitionRef = useRef<any | null>(null);
@@ -105,19 +175,37 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // 3. Browser Speech Synthesis (Text-To-Speech) with Lip-Sync
+  // 3. Browser Speech Synthesis with Human Indian English Accent & Pacing
+  const cleanSpokenText = (raw: string): string => {
+    return raw
+      .replace(/\*\*(.*?)\*\*/g, '$1') // remove bold
+      .replace(/\*(.*?)\*/g, '$1')     // remove italics
+      .replace(/`([^`]+)`/g, '$1')     // remove inline code ticks
+      .replace(/```[\s\S]*?```/g, 'Here is a code snippet.') // summarize code blocks in speech
+      .replace(/<think>[\s\S]*?<\/think>/gi, '') // strip any leftover reasoning tags
+      .replace(/#+\s/g, '')            // remove headings
+      .replace(/[-*•]\s+/g, '')        // remove bullet points
+      .replace(/\s+/g, ' ')            // collapse extra whitespace
+      .trim();
+  };
+
   const speakText = (text: string) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
 
     window.speechSynthesis.cancel(); // Stop any pending speech
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.05;
+    const cleaned = cleanSpokenText(text);
+    if (!cleaned) return;
 
-    // Pick a natural voice if available
-    const voices = window.speechSynthesis.getVoices();
-    const naturalVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
-    if (naturalVoice) utterance.voice = naturalVoice;
+    const utterance = new SpeechSynthesisUtterance(cleaned);
+    utterance.lang = 'en-IN'; // Set Indian English locale
+    utterance.rate = 0.94;    // Human conversational cadence (natural pacing, avoids robotic rush)
+    utterance.pitch = 1.0;
+
+    // Pick Indian voice
+    const activeVoice = selectedVoice || findIndianVoice(window.speechSynthesis.getVoices());
+    if (activeVoice) {
+      utterance.voice = activeVoice;
+    }
 
     utterance.onstart = () => {
       setIsAiSpeaking(true);
@@ -317,8 +405,41 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
           </button>
         </div>
 
-        {/* Timer & Finish Button */}
-        <div className="flex items-center gap-3">
+        {/* Voice Selector, Timer & Finish Button */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Indian English Voice Selector */}
+          {availableVoices.length > 0 && (
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+              <span className="text-sm" title="Accent: Indian English (en-IN)">🇮🇳</span>
+              <select
+                value={selectedVoice?.name || ''}
+                onChange={(e) => {
+                  const found = availableVoices.find(v => v.name === e.target.value);
+                  if (found) {
+                    setSelectedVoice(found);
+                    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                      window.speechSynthesis.cancel();
+                      const previewName = found.name.split('-')[0].replace(/Microsoft|Online|Natural|Google/gi, '').trim() || found.name;
+                      const testUtterance = new SpeechSynthesisUtterance(`Hello! Voice set to ${previewName}.`);
+                      testUtterance.voice = found;
+                      testUtterance.rate = 0.94;
+                      testUtterance.lang = 'en-IN';
+                      window.speechSynthesis.speak(testUtterance);
+                    }
+                  }
+                }}
+                className="bg-transparent text-slate-300 text-xs focus:outline-none cursor-pointer max-w-[120px] md:max-w-[160px] truncate"
+                title="Select Interviewer Voice (Prioritizing Indian English • en-IN)"
+              >
+                {availableVoices.map((v) => (
+                  <option key={v.name} value={v.name} className="bg-slate-900 text-white">
+                    {v.lang.toLowerCase().includes('in') || v.name.toLowerCase().includes('india') ? `🇮🇳 ${v.name}` : v.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold ${
               secondsRemaining < 300
@@ -352,10 +473,10 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                 isThinking={isAiThinking}
                 interviewerName={
                   interview?.llmProvider === 'antigravity' || interview?.llmProvider === 'local'
-                    ? 'Sophia (Antigravity AI Sub-Agent)'
+                    ? 'Ananya (Antigravity AI Sub-Agent • en-IN)'
                     : interview?.llmProvider === 'ollama'
-                    ? `Sophia (Ollama • ${interview?.llmModel || 'Local Model'})`
-                    : `Sophia (${interview?.llmProvider?.toUpperCase()} • BYOK)`
+                    ? `Ananya (Ollama • ${interview?.llmModel || 'Local Model'} • en-IN)`
+                    : `Ananya (${interview?.llmProvider?.toUpperCase()} • BYOK • en-IN)`
                 }
               />
               <CandidateCam candidateName="You (Candidate)" isRecording={isRecording} />
@@ -454,8 +575,20 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                 }`}
               >
                 <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1 font-semibold uppercase">
-                  <span>{msg.sender === 'agent' ? 'AI Interviewer' : msg.sender === 'system' ? 'System' : 'You'}</span>
-                  <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span>{msg.sender === 'agent' ? 'Ananya (AI Interviewer • en-IN)' : msg.sender === 'system' ? 'System' : 'You'}</span>
+                  <div className="flex items-center gap-1.5">
+                    {msg.sender === 'agent' && (
+                      <button
+                        type="button"
+                        onClick={() => speakText(msg.content)}
+                        className="text-blue-400 hover:text-blue-300 p-0.5 rounded transition-colors"
+                        title="Replay Voice (en-IN)"
+                      >
+                        <Volume2 className="w-3 h-3" />
+                      </button>
+                    )}
+                    <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
                 </div>
                 <p className="whitespace-pre-wrap">{msg.content}</p>
               </div>
