@@ -98,3 +98,13 @@
   - Added interactive Indian English voice selector dropdown (`🇮🇳`) in the top session bar with instantaneous audio preview on voice switch.
   - Added one-click audio replay button on interviewer transcript messages.
   - Updated system prompts across Antigravity Sub-Agent, Ollama Adapter, and BYOK Unified Adapter for warm, articulate Indian English dialogue.
+- **Hands-Free Two-Way Live Communication**:
+  - Full-duplex conversational loop:
+    1. AI interviewer (Ananya) speaks -> avatar lip-syncs -> microphone is safely muted to avoid computer speaker loopback.
+    2. The moment Ananya finishes speaking (`utterance.onend`), the microphone automatically activates (`startSpeechRecognition`).
+    3. Real-time speech recognition dynamically catches and displays candidate words as they speak.
+    4. Conversational pause detection (2.1s silence threshold) detects completion of candidate's answer and auto-submits turn to backend.
+    5. Visual countdown banner (*"Answer captured. Sending to Ananya in 2s..."*) with instantaneous "Send Now" and "Keep Speaking" controls.
+    6. Backend AI processes the answer, computes speech metrics, formulates the next question, and speaks aloud, seamlessly repeating the loop.
+  - Added "Join Video Call & Start Speaking" call-join overlay, enabling browser Web Audio and microphone permissions on initial gesture.
+  - Added Hands-Free 2-Way mode toggle (`Radio`) in the bottom bar, letting candidates easily switch between Hands-Free Two-Way and Manual Push-to-Talk.

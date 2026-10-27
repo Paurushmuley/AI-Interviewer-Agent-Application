@@ -16,6 +16,9 @@ import {
   StopCircle,
   Volume2,
   Languages,
+  Radio,
+  PhoneCall,
+  CheckCircle2,
 } from 'lucide-react';
 import { AiAvatar } from '@/components/avatar/AiAvatar';
 import { CandidateCam } from '@/components/camera/CandidateCam';
@@ -43,6 +46,26 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   const [candidateInput, setCandidateInput] = useState('');
   const [lastMetrics, setLastMetrics] = useState<SpeechMetrics | null>(null);
   const [turnStartTime, setTurnStartTime] = useState<number>(Date.now());
+
+  // Hands-Free Two-Way Live Conversation state
+  const [isTwoWayMode, setIsTwoWayMode] = useState(true);
+  const [hasStartedCall, setHasStartedCall] = useState(false);
+  const [autoSendingCountdown, setAutoSendingCountdown] = useState<number | null>(null);
+
+  // Synchronized refs to avoid stale closures in Web Speech callbacks
+  const isTwoWayModeRef = useRef(isTwoWayMode);
+  isTwoWayModeRef.current = isTwoWayMode;
+
+  const isAiSpeakingRef = useRef(isAiSpeaking);
+  isAiSpeakingRef.current = isAiSpeaking;
+
+  const isAiThinkingRef = useRef(isAiThinking);
+  isAiThinkingRef.current = isAiThinking;
+
+  const isSubmittingRef = useRef(false);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const recognitionRef = useRef<any | null>(null);
 
   // Coding Workspace State
   const [activeTab, setActiveTab] = useState<'video' | 'coding'>('video');
@@ -117,10 +140,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     };
   }, []);
 
-  // Speech Recognition ref
-  const recognitionRef = useRef<any | null>(null);
-
-  // 1. Fetch Interview Data & Initial Message
+  // 1. Fetch Interview Data
   useEffect(() => {
     async function loadInterview() {
       try {
@@ -135,10 +155,9 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
             setCodingChallenge(data.interview.codingSubmissions[0]);
           }
 
-          // Speak initial interviewer message if available
-          const firstMsg = data.interview.messages?.[0]?.content;
-          if (firstMsg) {
-            speakText(firstMsg);
+          // If interview already has previous candidate turns, resume call directly
+          if (data.interview.messages && data.interview.messages.length > 1) {
+            setHasStartedCall(true);
           }
         }
       } catch (err) {
@@ -150,6 +169,20 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
 
     loadInterview();
   }, [interviewId]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      if (recognitionRef.current) {
+        try { recognitionRef.current.abort(); } catch {}
+      }
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    };
+  }, []);
 
   // 2. Timer Countdown Engine
   useEffect(() => {
@@ -196,6 +229,12 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     const cleaned = cleanSpokenText(text);
     if (!cleaned) return;
 
+    // Abort speech recognition while AI is speaking so it doesn't transcribe its own voice
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch {}
+    }
+    setIsRecording(false);
+
     const utterance = new SpeechSynthesisUtterance(cleaned);
     utterance.lang = 'en-IN'; // Set Indian English locale
     utterance.rate = 0.94;    // Human conversational cadence (natural pacing, avoids robotic rush)
@@ -209,78 +248,182 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
 
     utterance.onstart = () => {
       setIsAiSpeaking(true);
+      isAiSpeakingRef.current = true;
       setIsAiThinking(false);
+      isAiThinkingRef.current = false;
     };
 
     utterance.onend = () => {
       setIsAiSpeaking(false);
+      isAiSpeakingRef.current = false;
       setTurnStartTime(Date.now()); // Mark start of candidate turn
+
+      // TWO-WAY COMMUNICATION: When Ananya finishes speaking, immediately start listening to candidate!
+      if (isTwoWayModeRef.current) {
+        startSpeechRecognition();
+      }
     };
 
     utterance.onerror = () => {
       setIsAiSpeaking(false);
+      isAiSpeakingRef.current = false;
+      if (isTwoWayModeRef.current) {
+        startSpeechRecognition();
+      }
     };
 
     window.speechSynthesis.speak(utterance);
   };
 
-  // 4. Browser Speech-To-Text (STT) Setup
-  const toggleSpeechRecognition = () => {
+  // 4. Two-Way Speech Recognition (STT): Catches words and auto-processes on conversational pause
+  const startSpeechRecognition = () => {
     if (typeof window === 'undefined') return;
+    if (isAiSpeakingRef.current || isAiThinkingRef.current) return;
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('Speech Recognition is not supported in this browser. You can type your response in the text field.');
+      console.warn('Speech Recognition not supported in this browser.');
       return;
     }
+
+    try {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.abort(); } catch {}
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-IN'; // Indian English ASR
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        let fullTranscript = '';
+        for (let i = 0; i < event.results.length; i++) {
+          fullTranscript += event.results[i][0].transcript + ' ';
+        }
+        const text = fullTranscript.trim();
+        if (!text) return;
+
+        setCandidateInput(text);
+
+        // TWO-WAY COMMUNICATION: When user speaks, catch words and auto-process on conversational pause!
+        if (isTwoWayModeRef.current) {
+          // Clear any active silence timers on each new word
+          if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = null;
+          }
+          if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+            countdownIntervalRef.current = null;
+          }
+
+          // If the candidate has spoken at least a few words (>= 6 chars), start the 2s pause countdown
+          if (text.length >= 6) {
+            let count = 2;
+            setAutoSendingCountdown(count);
+
+            countdownIntervalRef.current = setInterval(() => {
+              count -= 1;
+              if (count > 0) {
+                setAutoSendingCountdown(count);
+              } else {
+                if (countdownIntervalRef.current) {
+                  clearInterval(countdownIntervalRef.current);
+                  countdownIntervalRef.current = null;
+                }
+              }
+            }, 1000);
+
+            silenceTimerRef.current = setTimeout(() => {
+              setAutoSendingCountdown(null);
+              handleSendTurnWithText(text);
+            }, 2100); // 2.1-second natural conversational pause threshold
+          }
+        }
+      };
+
+      recognition.onerror = (err: any) => {
+        console.warn('Speech recognition warning:', err.error);
+        if (err.error === 'not-allowed') {
+          setIsRecording(false);
+        }
+      };
+
+      recognition.onend = () => {
+        // Auto-restart listening if two-way mode is active, AI is not speaking/thinking, and not currently submitting
+        if (
+          isTwoWayModeRef.current &&
+          !isAiSpeakingRef.current &&
+          !isAiThinkingRef.current &&
+          !isSubmittingRef.current
+        ) {
+          try {
+            recognition.start();
+            setIsRecording(true);
+          } catch {
+            setIsRecording(false);
+          }
+        } else {
+          setIsRecording(false);
+        }
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+      setIsRecording(true);
+      setTurnStartTime(Date.now());
+    } catch (err) {
+      console.warn('Could not start speech recognition:', err);
+      setIsRecording(false);
+    }
+  };
+
+  const toggleSpeechRecognition = () => {
+    if (typeof window === 'undefined') return;
 
     if (isRecording) {
-      // Stop recording
+      // User manually stopped recording
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+      setAutoSendingCountdown(null);
+
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try { recognitionRef.current.abort(); } catch {}
       }
       setIsRecording(false);
-      return;
+    } else {
+      // User manually started recording
+      startSpeechRecognition();
     }
-
-    // Start recording
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-
-    recognition.onresult = (event: any) => {
-      let fullTranscript = '';
-      for (let i = 0; i < event.results.length; i++) {
-        fullTranscript += event.results[i][0].transcript + ' ';
-      }
-      setCandidateInput(fullTranscript.trim());
-    };
-
-    recognition.onerror = (err: any) => {
-      console.warn('Speech recognition error:', err);
-      setIsRecording(false);
-    };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsRecording(true);
-    setTurnStartTime(Date.now());
   };
 
   // 5. Submit Candidate Turn to AI Interviewer
-  const handleSendTurn = async () => {
-    const textToSend = candidateInput.trim();
-    if (!textToSend) return;
+  const handleSendTurnWithText = async (overrideText?: string) => {
+    const textToSend = (overrideText !== undefined ? overrideText : candidateInput).trim();
+    if (!textToSend || isAiThinkingRef.current || isAiSpeakingRef.current) return;
 
-    if (isRecording && recognitionRef.current) {
-      recognitionRef.current.stop();
-      setIsRecording(false);
+    // Clear timers & countdown
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
     }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+    setAutoSendingCountdown(null);
+
+    // Stop recognition while submitting so voice isn't re-transcribed
+    isSubmittingRef.current = true;
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch {}
+    }
+    setIsRecording(false);
 
     const durationSeconds = Math.max(5, Math.round((Date.now() - turnStartTime) / 1000));
     const remainingMins = Math.round(secondsRemaining / 60);
@@ -295,6 +438,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     setMessages(prev => [...prev, tempUserMsg]);
     setCandidateInput('');
     setIsAiThinking(true);
+    isAiThinkingRef.current = true;
 
     try {
       const res = await fetch(`/api/interview/${interviewId}/turn`, {
@@ -323,7 +467,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
         setActiveTab('coding'); // Auto switch to coding editor when problem arrives!
       }
 
-      // Add Agent Message
+      // Add Agent Message and speak aloud (triggering the two-way loop)
       if (data.agentMessage) {
         setMessages(prev => [...prev, data.agentMessage]);
         speakText(data.agentMessage.content);
@@ -331,6 +475,23 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     } catch (err) {
       console.error('Error submitting turn:', err);
       setIsAiThinking(false);
+      isAiThinkingRef.current = false;
+      if (isTwoWayModeRef.current) {
+        startSpeechRecognition();
+      }
+    } finally {
+      isSubmittingRef.current = false;
+    }
+  };
+
+  // User Join / Start Live Video Call
+  const handleStartCall = () => {
+    setHasStartedCall(true);
+    const firstMsg = messages.find(m => m.sender === 'agent')?.content || interview?.messages?.[0]?.content;
+    if (firstMsg) {
+      speakText(firstMsg);
+    } else {
+      startSpeechRecognition();
     }
   };
 
@@ -467,7 +628,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
         <div className="lg:col-span-8 flex flex-col gap-3 h-full overflow-hidden">
           {activeTab === 'video' ? (
             /* Split Screen Video Call: AI Avatar on Left + Candidate WebCam on Right */
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-0">
+            <div className="relative grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-0">
               <AiAvatar
                 isSpeaking={isAiSpeaking}
                 isThinking={isAiThinking}
@@ -480,6 +641,27 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                 }
               />
               <CandidateCam candidateName="You (Candidate)" isRecording={isRecording} />
+
+              {/* Initial Call Connect Overlay */}
+              {!hasStartedCall && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-950/85 backdrop-blur-md rounded-2xl p-6 text-center border border-slate-800">
+                  <div className="w-16 h-16 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center mb-4 text-blue-400 animate-pulse shadow-lg shadow-blue-500/20">
+                    <PhoneCall className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-1.5">Live Two-Way Video Call Ready</h3>
+                  <p className="text-xs text-slate-300 max-w-md mb-5 leading-relaxed">
+                    Lead Technical Interviewer <strong className="text-blue-400">Ananya</strong> is online.
+                    Two-way conversational audio is enabled. When you speak, the application will catch your words and process them dynamically.
+                  </p>
+                  <button
+                    onClick={handleStartCall}
+                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm flex items-center gap-2.5 shadow-xl shadow-blue-500/25 transition-all transform hover:scale-105 active:scale-95"
+                  >
+                    <PhoneCall className="w-4 h-4" />
+                    <span>Join Video Call & Start Speaking</span>
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             /* Coding Profile Workspace */
@@ -500,15 +682,86 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
 
           {/* Bottom Bar: Real-time NLP Metrics & Speech Input */}
           <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2.5">
-            {/* Live NLP Metrics Badges */}
-            <div className="flex items-center justify-between">
+            {/* Live NLP Metrics Badges & 2-Way Mode Status */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <SpeechMetricsBadge metrics={lastMetrics} />
-              {isAiSpeaking && (
-                <span className="text-[11px] text-emerald-400 flex items-center gap-1">
-                  <Volume2 className="w-3.5 h-3.5 animate-pulse" /> Audio lip-sync active
-                </span>
-              )}
+
+              <div className="flex items-center gap-2">
+                {/* Two-Way Mode Toggle */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsTwoWayMode(prev => {
+                      const next = !prev;
+                      if (!next) {
+                        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+                        if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+                        setAutoSendingCountdown(null);
+                      } else {
+                        if (!isAiSpeakingRef.current && !isAiThinkingRef.current) {
+                          startSpeechRecognition();
+                        }
+                      }
+                      return next;
+                    });
+                  }}
+                  className={`px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all border ${
+                    isTwoWayMode
+                      ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
+                      : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                  }`}
+                  title="Toggle Hands-Free Two-Way Live Conversation"
+                >
+                  <Radio className={`w-3.5 h-3.5 ${isTwoWayMode ? 'animate-pulse text-emerald-400' : ''}`} />
+                  <span>{isTwoWayMode ? 'Hands-Free 2-Way: Active' : 'Manual Push-to-Talk'}</span>
+                </button>
+
+                {/* Conversation State Indicators */}
+                {isAiSpeaking ? (
+                  <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
+                    <Volume2 className="w-3.5 h-3.5 animate-pulse" /> Ananya is speaking...
+                  </span>
+                ) : isAiThinking ? (
+                  <span className="text-[11px] text-purple-400 flex items-center gap-1 font-medium">
+                    <Sparkles className="w-3.5 h-3.5 animate-spin" /> Ananya analyzing response...
+                  </span>
+                ) : isRecording ? (
+                  <span className="text-[11px] text-rose-400 flex items-center gap-1 font-medium animate-pulse">
+                    <Mic className="w-3.5 h-3.5" /> Listening to you...
+                  </span>
+                ) : null}
+              </div>
             </div>
+
+            {/* Auto-submission Countdown Bar */}
+            {autoSendingCountdown !== null && (
+              <div className="flex items-center justify-between px-3 py-1.5 bg-blue-500/15 border border-blue-500/30 rounded-xl text-xs text-blue-200 animate-pulse">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Answer captured. Sending to Ananya in <strong>{autoSendingCountdown}s</strong>...</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSendTurnWithText()}
+                    className="px-2.5 py-0.5 rounded bg-blue-600 hover:bg-blue-500 text-white font-bold text-[11px] transition-colors"
+                  >
+                    Send Now
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+                      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+                      setAutoSendingCountdown(null);
+                    }}
+                    className="text-[11px] text-slate-300 hover:text-white underline cursor-pointer"
+                  >
+                    Keep Speaking
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Answer Input Controls */}
             <div className="flex items-center gap-2">
@@ -520,7 +773,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                     ? 'bg-red-600 text-white animate-pulse shadow-lg shadow-red-600/30'
                     : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
                 }`}
-                title={isRecording ? 'Stop speaking and send' : 'Speak your answer (Speech-to-Text)'}
+                title={isRecording ? 'Mute / Stop Mic' : 'Start Speaking (Mic)'}
               >
                 {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-blue-400" />}
               </button>
@@ -529,14 +782,20 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                 type="text"
                 value={candidateInput}
                 onChange={e => setCandidateInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSendTurn()}
-                placeholder={isRecording ? 'Listening to your voice...' : 'Type or speak your answer...'}
+                onKeyDown={e => e.key === 'Enter' && handleSendTurnWithText()}
+                placeholder={
+                  isRecording
+                    ? 'Listening live... speak your answer'
+                    : isTwoWayMode
+                    ? 'Hands-free 2-way mode active (starts listening when interviewer finishes speaking)'
+                    : 'Type or click mic to speak...'
+                }
                 className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
               />
 
               <button
                 type="button"
-                onClick={handleSendTurn}
+                onClick={() => handleSendTurnWithText()}
                 disabled={!candidateInput.trim() || isAiThinking}
                 className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-md shadow-blue-600/20 shrink-0"
               >

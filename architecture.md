@@ -182,7 +182,27 @@ To replace robotic speech with authentic, warm human cadence, the audio synthesi
 
 ---
 
-### 3.9. Database Schema Design (PostgreSQL)
+### 3.9. Hands-Free Two-Way Live Communication Loop
+To deliver a realistic, hands-free video interview experience without manual button clicking:
+1. **Full-Duplex Conversational Pacing**:
+   - When the AI Interviewer is speaking (`isAiSpeaking`), the microphone is automatically suspended to avoid capturing speaker audio.
+   - When the AI speech finishes (`utterance.onend`), the microphone immediately starts listening (`startSpeechRecognition`) and displays `"Listening to you..."`.
+2. **Dynamic Speech Capture & Word Recognition**:
+   - Real-time speech recognition (`en-IN`) captures spoken phonemes, dynamically updating the transcript and candidate input box in real time.
+3. **Conversational Silence Detection**:
+   - Tracks a 2.1-second conversational pause window. If the candidate stops speaking, a visual countdown appears (*"Answer captured. Sending to Ananya in 2s..."*).
+   - If candidate resumes speaking, the silence timer resets immediately.
+   - If silence threshold elapses, the application automatically submits the turn to `/api/interview/[id]/turn`.
+4. **Autonomous Agent Response & Audio Hand-Off**:
+   - The backend AI evaluates the response, calculates NLP metrics, generates the next context-aware question, and speaks aloud using Indian English TTS.
+   - On completion of speech, the cycle restarts hands-free.
+5. **Candidate Flexibility**:
+   - Candidates can toggle between **Hands-Free Two-Way** and **Manual Push-to-Talk** at any time.
+   - Instant "Send Now" and "Keep Speaking" buttons are provided during the pause detection window.
+
+---
+
+### 3.10. Database Schema Design (PostgreSQL)
 
 ```mermaid
 erDiagram
