@@ -199,6 +199,9 @@ To deliver a realistic, hands-free video interview experience without manual but
 5. **Candidate Flexibility**:
    - Candidates can toggle between **Hands-Free Two-Way** and **Manual Push-to-Talk** at any time.
    - Instant "Send Now" and "Keep Speaking" buttons are provided during the pause detection window.
+6. **Immediate Session Termination with Confirmation Tab**:
+   - Clicking "End & Evaluate" prompts a confirmation tab to prevent accidental termination.
+   - Upon confirmation, speech synthesis, active recording, and countdown timers terminate immediately, presenting a concluding overlay and directing the user directly to the scorecard report.
 
 ---
 

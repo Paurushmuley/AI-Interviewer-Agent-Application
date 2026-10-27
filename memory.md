@@ -108,3 +108,7 @@
     6. Backend AI processes the answer, computes speech metrics, formulates the next question, and speaks aloud, seamlessly repeating the loop.
   - Added "Join Video Call & Start Speaking" call-join overlay, enabling browser Web Audio and microphone permissions on initial gesture.
   - Added Hands-Free 2-Way mode toggle (`Radio`) in the bottom bar, letting candidates easily switch between Hands-Free Two-Way and Manual Push-to-Talk.
+- **Immediate Interview End with Confirmation Tab**:
+  - Clicking "End & Evaluate" opens a confirmation tab/modal (`showEndConfirmModal`) preventing accidental clicks while safely pausing active listening.
+  - Upon user confirmation (*"Yes, End Immediately"*), all active audio synthesis (`speechSynthesis.cancel()`), microphones (`recognition.abort()`), and timers are terminated instantaneously.
+  - Displays a concluding session overlay and triggers evaluation (`/api/interview/[id]/evaluate`), routing immediately to the comprehensive scorecard report (`/report/[id]`).

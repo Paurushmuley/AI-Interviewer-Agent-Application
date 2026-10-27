@@ -495,17 +495,55 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     }
   };
 
-  // 6. Finish Interview & View Report
-  const handleFinishInterview = async () => {
+  // 6. Finish Interview & View Report with Instant Confirmation Tab
+  const [showEndConfirmModal, setShowEndConfirmModal] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
+
+  // Trigger Confirmation Tab
+  const requestEndInterview = () => {
+    // Stop recognition while user is considering
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch {}
+    }
+    setIsRecording(false);
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    setAutoSendingCountdown(null);
+    setShowEndConfirmModal(true);
+  };
+
+  const cancelEndInterview = () => {
+    setShowEndConfirmModal(false);
+    // Resume listening if two-way mode is active
+    if (isTwoWayModeRef.current && !isAiSpeakingRef.current && !isAiThinkingRef.current) {
+      startSpeechRecognition();
+    }
+  };
+
+  // Immediate Conclude & Finalize Interview
+  const confirmImmediateEndInterview = async () => {
+    setShowEndConfirmModal(false);
+    setIsEnding(true);
     setTimerActive(false);
+
+    // Immediately stop speech synthesis & microphone
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch {}
+    }
+    setIsRecording(false);
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    setAutoSendingCountdown(null);
 
     try {
       const res = await fetch(`/api/interview/${interviewId}/evaluate`, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
+        router.push(`/report/${interviewId}`);
+      } else {
         router.push(`/report/${interviewId}`);
       }
     } catch {
@@ -613,8 +651,9 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
           </div>
 
           <button
-            onClick={handleFinishInterview}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-600/90 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold transition-colors shadow-md shadow-rose-600/20"
+            onClick={requestEndInterview}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-600/90 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold transition-colors shadow-md shadow-rose-600/20 cursor-pointer"
+            title="Conclude and evaluate this interview session"
           >
             <StopCircle className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">End & Evaluate</span>
@@ -855,6 +894,55 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
       </div>
+
+      {/* End Interview Confirmation Tab / Modal */}
+      {showEndConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl text-center space-y-4">
+            <div className="w-14 h-14 mx-auto rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+              <StopCircle className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-bold text-white">Conclude Interview Session?</h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Are you sure you want to end this interview? All your spoken responses, technical answers, and coding submissions will be finalized to immediately generate your comprehensive evaluation report.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                onClick={cancelEndInterview}
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold text-xs transition-colors border border-slate-700 cursor-pointer"
+              >
+                Return to Interview
+              </button>
+              <button
+                type="button"
+                onClick={confirmImmediateEndInterview}
+                className="w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-colors shadow-lg shadow-rose-600/30 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <StopCircle className="w-4 h-4" />
+                <span>Yes, End Immediately</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Immediate Evaluation Ending Overlay */}
+      {isEnding && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-slate-950/90 backdrop-blur-md">
+          <div className="w-16 h-16 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center mb-4 text-blue-400 animate-spin">
+            <Sparkles className="w-8 h-8" />
+          </div>
+          <h3 className="text-lg font-bold text-white mb-2">Concluding Interview Session</h3>
+          <p className="text-xs text-slate-400 max-w-sm text-center leading-relaxed">
+            Evaluating your responses, NLP communication metrics, and live coding performance. Redirecting to your report...
+          </p>
+        </div>
+      )}
     </div>
   );
 }
