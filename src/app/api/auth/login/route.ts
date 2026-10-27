@@ -10,15 +10,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 });
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { email: cleanEmail },
     });
 
     if (!user) {
       return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
     }
 
-    const isValid = await verifyPassword(password, user.passwordHash);
+    // Check password as-is and also trimmed to guard against copy-paste whitespace
+    let isValid = await verifyPassword(password, user.passwordHash);
+    if (!isValid && typeof password === 'string' && password !== password.trim()) {
+      isValid = await verifyPassword(password.trim(), user.passwordHash);
+    }
+
     if (!isValid) {
       return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
     }

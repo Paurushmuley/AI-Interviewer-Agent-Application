@@ -14,8 +14,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Password must be at least 6 characters.' }, { status: 400 });
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+
     // Check if user exists
-    const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    const existing = await prisma.user.findUnique({ where: { email: cleanEmail } });
     if (existing) {
       return NextResponse.json({ error: 'User with this email already exists.' }, { status: 409 });
     }
@@ -23,9 +25,9 @@ export async function POST(req: NextRequest) {
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({
       data: {
-        email: email.toLowerCase(),
+        email: cleanEmail,
         passwordHash,
-        name: name || email.split('@')[0],
+        name: name || cleanEmail.split('@')[0],
       },
     });
 

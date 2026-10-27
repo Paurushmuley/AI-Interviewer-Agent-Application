@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { LogIn, Mail, Lock, AlertCircle, ArrowRight } from 'lucide-react';
+import { LogIn, Mail, Lock, AlertCircle, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +22,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
       const data = await res.json();
@@ -37,10 +38,16 @@ export default function LoginPage() {
     }
   };
 
+  const fillDevAccount = () => {
+    setEmail('dev@aiinterviewer.io');
+    setPassword('DevTest@2026!');
+    setError(null);
+  };
+
   return (
     <div className="flex-1 flex items-center justify-center p-4">
       <div className="w-full max-w-md p-8 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl shadow-2xl">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mx-auto mb-4">
             <LogIn className="w-6 h-6" />
           </div>
@@ -48,6 +55,21 @@ export default function LoginPage() {
           <p className="text-xs text-slate-400 mt-1">
             Log in to view past interviews, practice scorecards, and managed keys.
           </p>
+        </div>
+
+        {/* Quick Fill Dev Account Banner */}
+        <div className="mb-6 p-3 rounded-xl bg-blue-950/30 border border-blue-500/20 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 text-blue-300">
+            <Sparkles className="w-4 h-4 text-blue-400 shrink-0" />
+            <span>Dev Testing Account Ready</span>
+          </div>
+          <button
+            type="button"
+            onClick={fillDevAccount}
+            className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg text-[11px] transition-colors"
+          >
+            Auto-fill
+          </button>
         </div>
 
         {error && (
@@ -67,7 +89,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="alex@example.com"
+                placeholder="dev@aiinterviewer.io"
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
@@ -78,13 +100,21 @@ export default function LoginPage() {
             <div className="relative">
               <Lock className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full pl-10 pr-10 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-3 text-slate-500 hover:text-slate-300 transition-colors"
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 
