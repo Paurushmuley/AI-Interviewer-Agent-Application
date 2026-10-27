@@ -205,7 +205,25 @@ To deliver a realistic, hands-free video interview experience without manual but
 
 ---
 
-### 3.10. Database Schema Design (PostgreSQL)
+### 3.10. Dynamic Answer-Dependent Evaluation & Word Repetition Engine
+To strictly eliminate generic templates and deliver fully customized feedback:
+1. **Direct Answer Quoting & Validation**:
+   - Matches every interviewer question with the candidate's actual answers.
+   - Extracts specific technical claims, architecture choices, and libraries mentioned, directly embedding candidate quotes into the report.
+2. **Lexical Diversity & Word Repetition Analytics (`analyzeWordRepetition`)**:
+   - Computes Type-Token Ratio (TTR): $\text{Lexical Diversity} = \frac{\text{Unique Words}}{\text{Total Spoken Words}} \times 100\%$.
+   - Tracks crutch words (*"basically", "like", "actually", "obviously", "stuff", "literally"*).
+   - Lists top repeated non-stop words with exact occurrence counts.
+3. **Delivery Confidence & Spoken NLP Scoring**:
+   - Synthesizes hesitation markers, filler word counts, and WPM pace into an empirical verbal communication score.
+4. **Live Coding Review**:
+   - Evaluates submitted code for correctness, defensive input validation, and algorithmic time/space complexity ($O(N)$ vs $O(N^2)$).
+5. **Report Presentation**:
+   - Dedicated Verbal Delivery & Vocabulary Repetition section in `/report/[id]` displaying diversity cards, repeated term pills, and customized strengths/improvements.
+
+---
+
+### 3.11. Database Schema Design (PostgreSQL)
 
 ```mermaid
 erDiagram

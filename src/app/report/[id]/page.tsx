@@ -156,6 +156,107 @@ export default function InterviewReportPage({ params }: { params: Promise<{ id: 
         </div>
       </div>
 
+      {/* Speech & Vocabulary Repetition Analytics */}
+      {report?.categoryScores?.speechAnalytics && (
+        <div className="p-6 rounded-3xl bg-slate-900/40 border border-slate-800 space-y-5">
+          <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-blue-400" />
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                Verbal Delivery & Vocabulary Repetition Analytics
+              </h3>
+            </div>
+            <span className="text-[11px] font-semibold text-slate-400">
+              Spoken Turn NLP Analysis
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Lexical Diversity */}
+            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1.5">
+              <span className="text-xs text-slate-400 font-medium">Lexical Diversity (Type-Token Ratio)</span>
+              <div className="text-2xl font-bold text-blue-400">
+                {report.categoryScores.speechAnalytics.lexicalDiversityPercent}%
+              </div>
+              <p className="text-[11px] text-slate-400">
+                {report.categoryScores.speechAnalytics.lexicalDiversityPercent >= 50
+                  ? 'Strong vocabulary range with varied technical terms.'
+                  : 'Noticeable vocabulary repetition. Practice substituting common words.'}
+              </p>
+            </div>
+
+            {/* Speaking Pace & Cadence */}
+            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1.5">
+              <span className="text-xs text-slate-400 font-medium">Average Spoken Tempo</span>
+              <div className="text-2xl font-bold text-emerald-400">
+                {report.categoryScores.speechAnalytics.avgWpm} <span className="text-sm font-normal text-slate-400">WPM</span>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                {report.categoryScores.speechAnalytics.avgWpm >= 115 && report.categoryScores.speechAnalytics.avgWpm <= 165
+                  ? 'Optimal conversational pace for clear video communication.'
+                  : report.categoryScores.speechAnalytics.avgWpm < 115
+                  ? 'Pacing was deliberate or hesitant. Practice continuous flow.'
+                  : 'Fast cadence. Slow down slightly to emphasize key points.'}
+              </p>
+            </div>
+
+            {/* Total Fillers */}
+            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/80 space-y-1.5">
+              <span className="text-xs text-slate-400 font-medium">Recorded Filler Words</span>
+              <div className="text-2xl font-bold text-amber-400">
+                {report.categoryScores.speechAnalytics.totalFillers}
+              </div>
+              <p className="text-[11px] text-slate-400">
+                {report.categoryScores.speechAnalytics.totalFillers <= 3
+                  ? 'Excellent verbal clarity with minimal speech fillers.'
+                  : 'Moderate filler usage. Pause intentionally instead of using crutch words.'}
+              </p>
+            </div>
+          </div>
+
+          {/* Repetition Pills */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+            {/* Top Repeated Words */}
+            <div className="space-y-2">
+              <span className="text-xs font-semibold text-slate-300">Most Frequently Repeated Terms:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {report.categoryScores.speechAnalytics.topRepeatedWords?.length > 0 ? (
+                  report.categoryScores.speechAnalytics.topRepeatedWords.map((item: any) => (
+                    <span
+                      key={item.word}
+                      className="px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-300 text-xs font-mono"
+                    >
+                      {item.word} <strong className="text-blue-400 font-bold">({item.count}x)</strong>
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-500 italic">No excessive term repetition detected.</span>
+                )}
+              </div>
+            </div>
+
+            {/* Crutch Words */}
+            <div className="space-y-2">
+              <span className="text-xs font-semibold text-slate-300">Conversational Crutch Words:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {report.categoryScores.speechAnalytics.crutchWordsFrequency?.length > 0 ? (
+                  report.categoryScores.speechAnalytics.crutchWordsFrequency.map((item: any) => (
+                    <span
+                      key={item.word}
+                      className="px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-mono"
+                    >
+                      "{item.word}" <strong className="text-rose-400 font-bold">({item.count}x)</strong>
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs text-emerald-400/90 italic">Zero conversational crutch words recorded.</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Strengths & Improvements Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Strengths */}

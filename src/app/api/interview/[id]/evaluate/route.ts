@@ -29,26 +29,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       });
     }
 
-    // Collect coding scores
-    const codingScores = interview.codingSubmissions
-      .map(s => s.score)
-      .filter((s): s is number => s !== null && s !== undefined);
-
-    // Generate comprehensive evaluation
+    // Generate comprehensive evaluation strictly dependent on candidate answers, repetition & confidence
     const reportData = await antigravityAgent.generateEvaluationReport(
       {
         roleTitle: interview.roleTitle,
         experienceLevel: interview.experienceLevel,
+        jobDescription: interview.jobDescription,
+        parsedResume: interview.parsedResume,
       },
       interview.messages.map(m => ({
         sender: m.sender,
         content: m.content,
         nlpMetrics: m.nlpMetrics,
       })),
-      codingScores
+      interview.codingSubmissions.map(s => ({
+        problemTitle: s.problemTitle,
+        language: s.language,
+        submittedCode: s.submittedCode,
+        score: s.score,
+        feedback: s.feedback,
+        testResults: s.testResults,
+      }))
     );
 
-    const categoryScores = {
+    const categoryScores = reportData.categoryScores || {
       technicalFundamentals: reportData.technicalScore,
       problemSolving: Math.min(100, reportData.technicalScore + 5),
       codingProficiency: reportData.codingScore,

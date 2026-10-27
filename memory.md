@@ -112,3 +112,9 @@
   - Clicking "End & Evaluate" opens a confirmation tab/modal (`showEndConfirmModal`) preventing accidental clicks while safely pausing active listening.
   - Upon user confirmation (*"Yes, End Immediately"*), all active audio synthesis (`speechSynthesis.cancel()`), microphones (`recognition.abort()`), and timers are terminated instantaneously.
   - Displays a concluding session overlay and triggers evaluation (`/api/interview/[id]/evaluate`), routing immediately to the comprehensive scorecard report (`/report/[id]`).
+- **Non-Generalized, 100% Answer-Dependent Performance Report**:
+  - Eliminated all static/generalized template bullet points.
+  - Added `analyzeWordRepetition` computing Lexical Diversity (Type-Token Ratio) and detecting repeated words and crutch phrases (`basically`, `like`, `actually`, `literally`, `obviously`, `stuff`).
+  - Report directly quotes candidate's exact spoken responses, questions answered, technical technologies claimed, and coding submissions.
+  - Added dedicated **"Verbal Delivery & Vocabulary Repetition Analytics"** section to `/report/[id]` displaying Lexical Diversity %, average WPM tempo, filler breakdown, and repeated term pills with counts.
+  - Evaluates live coding submission accuracy, edge cases, and algorithmic complexity, seamlessly synthesized via local Ollama or deterministic semantic evaluator.

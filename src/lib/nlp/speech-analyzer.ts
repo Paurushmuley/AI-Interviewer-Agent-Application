@@ -128,3 +128,104 @@ export function analyzeSpeechTranscript(
     strongActionWords: strongWordsFound,
   };
 }
+
+export interface WordRepetitionAnalysis {
+  totalSpokenWords: number;
+  uniqueWordsCount: number;
+  lexicalDiversityPercent: number; // Type-Token Ratio
+  topRepeatedWords: Array<{ word: string; count: number }>;
+  crutchWordsFrequency: Array<{ word: string; count: number }>;
+  repetitiveSummary: string;
+}
+
+const STOP_WORDS = new Set([
+  'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', "aren't", 'as', 'at',
+  'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can', "can't", 'cannot',
+  'could', "couldn't", 'did', "didn't", 'do', 'does', "doesn't", 'doing', "don't", 'down', 'during', 'each',
+  'few', 'for', 'from', 'further', 'had', "hadn't", 'has', "hasn't", 'have', "haven't", 'having', 'he', "he'd",
+  "he'll", "he's", 'her', 'here', "here's", 'hers', 'herself', 'him', 'himself', 'his', 'how', "how's", 'i',
+  "i'd", "i'll", "i'm", "i've", 'if', 'in', 'into', 'is', "isn't", 'it', "it's", 'its', 'itself', "let's",
+  'me', 'more', 'most', "mustn't", 'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'only', 'or',
+  'other', 'ought', 'our', 'ours', 'ourselves', 'out', 'over', 'own', 'same', "shan't", 'she', "she'd", "she'll",
+  "she's", 'should', "shouldn't", 'so', 'some', 'such', 'than', 'that', "that's", 'the', 'their', 'theirs',
+  'them', 'themselves', 'then', 'there', "there's", 'these', 'they', "they'd", "they'll", "they're", "they've",
+  'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', "wasn't", 'we', "we'd", "we'll",
+  "we're", "we've", 'were', "weren't", 'what', "what's", 'when', "when's", 'where', "where's", 'which',
+  'while', 'who', "who's", 'whom', 'why', "why's", 'with', "won't", 'would', "wouldn't", 'you', "you'd",
+  "you'll", "you're", "you've", 'your', 'yours', 'yourself', 'yourselves'
+]);
+
+const CRUTCH_WORDS = new Set([
+  'basically', 'like', 'actually', 'literally', 'obviously', 'stuff', 'things',
+  'sort of', 'kind of', 'pretty much', 'you know', 'right', 'honestly', 'whatever', 'definitely'
+]);
+
+/**
+ * Analyzes word repetition, lexical diversity, and crutch word frequencies across all candidate spoken turns.
+ */
+export function analyzeWordRepetition(allSpokenTexts: string[]): WordRepetitionAnalysis {
+  const fullText = allSpokenTexts.join(' ').toLowerCase();
+  const rawWords = fullText.match(/\b[a-z0-9'-]+\b/g) || [];
+  const totalSpokenWords = rawWords.length;
+
+  if (totalSpokenWords === 0) {
+    return {
+      totalSpokenWords: 0,
+      uniqueWordsCount: 0,
+      lexicalDiversityPercent: 0,
+      topRepeatedWords: [],
+      crutchWordsFrequency: [],
+      repetitiveSummary: 'Insufficient candidate spoken turns to analyze vocabulary diversity.',
+    };
+  }
+
+  const frequencyMap = new Map<string, number>();
+  const uniqueWordsSet = new Set<string>();
+
+  for (const word of rawWords) {
+    uniqueWordsSet.add(word);
+    frequencyMap.set(word, (frequencyMap.get(word) || 0) + 1);
+  }
+
+  // Lexical Diversity (Type-Token Ratio)
+  const lexicalDiversityPercent = Math.round((uniqueWordsSet.size / totalSpokenWords) * 100);
+
+  // Top non-stop repeated words (repeated >= 2 times)
+  const nonStopWordRepeats: Array<{ word: string; count: number }> = [];
+  const crutchWordRepeats: Array<{ word: string; count: number }> = [];
+
+  for (const [word, count] of frequencyMap.entries()) {
+    if (CRUTCH_WORDS.has(word) && count >= 2) {
+      crutchWordRepeats.push({ word, count });
+    }
+    if (!STOP_WORDS.has(word) && word.length > 2 && count >= 2) {
+      nonStopWordRepeats.push({ word, count });
+    }
+  }
+
+  // Sort descending
+  nonStopWordRepeats.sort((a, b) => b.count - a.count);
+  crutchWordRepeats.sort((a, b) => b.count - a.count);
+
+  const topRepeatedWords = nonStopWordRepeats.slice(0, 6);
+  const crutchWordsFrequency = crutchWordRepeats.slice(0, 5);
+
+  let repetitiveSummary = '';
+  if (crutchWordsFrequency.length > 0) {
+    const list = crutchWordsFrequency.map(c => `"${c.word}" (${c.count}x)`).join(', ');
+    repetitiveSummary = `Frequent reliance on crutch words: ${list}. Lexical diversity was ${lexicalDiversityPercent}%.`;
+  } else if (lexicalDiversityPercent > 55) {
+    repetitiveSummary = `Strong vocabulary range with ${lexicalDiversityPercent}% lexical diversity and minimal repetitive crutch words.`;
+  } else {
+    repetitiveSummary = `Moderate vocabulary variety (${lexicalDiversityPercent}% lexical diversity). Practice intentional pauses to reduce repetition.`;
+  }
+
+  return {
+    totalSpokenWords,
+    uniqueWordsCount: uniqueWordsSet.size,
+    lexicalDiversityPercent,
+    topRepeatedWords,
+    crutchWordsFrequency,
+    repetitiveSummary,
+  };
+}
