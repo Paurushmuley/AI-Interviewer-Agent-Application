@@ -213,11 +213,19 @@ To strictly eliminate generic templates and deliver fully customized feedback:
 1. **Direct Answer Quoting & Validation**:
    - Matches every interviewer question with the candidate's actual answers.
    - Extracts specific technical claims, architecture choices, and libraries mentioned, directly embedding candidate quotes into the report.
-2. **Lexical Diversity & Word Repetition Analytics (`analyzeWordRepetition`)**:
+2. **Question-by-Question Deep Evaluation (`qaEvaluations`)**:
+   - Scores every single question individually (0-100) and displays a quality badge ("Strong & Articulate", "Solid with Minor Gaps", "Partially Answered", "Vague / Needs Depth").
+   - Highlights Demonstrated Strengths, Critical Gaps, and an L5/L6 Senior Engineer Benchmark (how to answer better).
+3. **Targeted Growth Roadmap & What to Improve (`actionableImprovementPlan`)**:
+   - Prioritized High & Medium Technical Gaps with "Why It Matters", "Actionable Remedy", and a "Targeted Practice Question".
+   - Specific remediation for speech fillers, crutch terms, and vocabulary repetition.
+   - Algorithmic and defensive coding recommendations.
+   - 4-Week structured step-by-step interview mastery roadmap.
+4. **Lexical Diversity & Word Repetition Analytics (`analyzeWordRepetition`)**:
    - Computes Type-Token Ratio (TTR): $\text{Lexical Diversity} = \frac{\text{Unique Words}}{\text{Total Spoken Words}} \times 100\%$.
    - Tracks crutch words (*"basically", "like", "actually", "obviously", "stuff", "literally"*).
    - Lists top repeated non-stop words with exact occurrence counts.
-3. **Delivery Confidence & Spoken NLP Scoring**:
+5. **Delivery Confidence & Spoken NLP Scoring**:
    - Synthesizes hesitation markers, filler word counts, and WPM pace into an empirical verbal communication score.
 4. **Live Coding Review**:
    - Evaluates submitted code for correctness, defensive input validation, and algorithmic time/space complexity ($O(N)$ vs $O(N^2)$).

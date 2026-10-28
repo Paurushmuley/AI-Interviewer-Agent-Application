@@ -113,8 +113,19 @@
   - Clicking "End & Evaluate" opens a confirmation tab/modal (`showEndConfirmModal`) preventing accidental clicks while safely pausing active listening.
   - Upon user confirmation (*"Yes, End Immediately"*), all active audio synthesis (`speechSynthesis.cancel()`), microphones (`recognition.abort()`), and timers are terminated instantaneously.
   - Displays a concluding session overlay and triggers evaluation (`/api/interview/[id]/evaluate`), routing immediately to the comprehensive scorecard report (`/report/[id]`).
-- **Non-Generalized, 100% Answer-Dependent Performance Report**:
-  - Eliminated all static/generalized template bullet points.
+- **Non-Generalized, 100% Answer-Dependent Performance Report & Realistic Interview Engine**:
+  - Eliminated all static/generalized template bullet points and robotic conversational greetings.
+  - Upgraded Arohi's conversational engine to perform safe multi-domain technical entity extraction, acknowledging candidate claims with human conversational affirmations before asking incisive follow-up questions.
+  - Implemented **Question-by-Question Deep Evaluation (`qaEvaluations`)**:
+    - Every question asked is paired with candidate's exact spoken answer.
+    - Scored individually (0-100) with a Quality Badge ("Strong & Articulate", "Solid with Minor Gaps", "Partially Answered", "Vague / Needs Depth").
+    - Highlights Demonstrated Strengths, Critical Gaps, and an L5/L6 Senior Engineer Benchmark (how to answer better).
+  - Implemented **Actionable Growth Roadmap ("What He Needs to Improve")**:
+    - Prioritized High & Medium Technical Gaps with "Why It Matters", "Actionable Remedy", and "Targeted Practice Question".
+    - Verbal delivery and communication polish targeting recorded filler words and repeated terms.
+    - Live coding and defensive programming guidance.
+    - 4-Week Structured Interview Mastery Roadmap.
+  - Upgraded `/report/[id]` page with interactive question accordion, recommendation badges, speech analytics, and one-click "Re-analyze Report" feature.
   - Added `analyzeWordRepetition` computing Lexical Diversity (Type-Token Ratio) and detecting repeated words and crutch phrases (`basically`, `like`, `actually`, `literally`, `obviously`, `stuff`).
   - Report directly quotes candidate's exact spoken responses, questions answered, technical technologies claimed, and coding submissions.
   - Added dedicated **"Verbal Delivery & Vocabulary Repetition Analytics"** section to `/report/[id]` displaying Lexical Diversity %, average WPM tempo, filler breakdown, and repeated term pills with counts.

@@ -7,12 +7,13 @@ const antigravityAgent = new AntigravityInterviewSubAgent();
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: interviewId } = await params;
+    const forceRegenerate = req.nextUrl.searchParams.get('regenerate') === 'true';
 
     const interview = await prisma.interview.findUnique({
       where: { id: interviewId },
       include: {
         messages: { orderBy: { timestamp: 'asc' } },
-        codingSubmissions: true,
+        codingSubmissions: { orderBy: { createdAt: 'desc' } },
         evaluation: true,
       },
     });
@@ -21,12 +22,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Interview not found.' }, { status: 404 });
     }
 
-    // Check if report already exists
-    if (interview.evaluation) {
-      return NextResponse.json({
-        success: true,
-        report: interview.evaluation,
-      });
+    // Check if report already exists and has comprehensive Q&A evaluations
+    if (interview.evaluation && !forceRegenerate) {
+      const existingScores = interview.evaluation.categoryScores as any;
+      if (existingScores?.qaEvaluations && existingScores?.actionableImprovementPlan) {
+        return NextResponse.json({
+          success: true,
+          report: interview.evaluation,
+        });
+      }
     }
 
     // Generate comprehensive evaluation strictly dependent on candidate answers, repetition & confidence
@@ -60,16 +64,28 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       deliveryAndConfidence: reportData.confidenceScore,
     };
 
-    // Save report in DB and mark interview completed
-    const evaluation = await prisma.evaluationReport.create({
-      data: {
+    // Upsert report in DB and mark interview completed
+    const evaluation = await prisma.evaluationReport.upsert({
+      where: { interviewId },
+      update: {
+        overallScore: reportData.overallScore,
+        technicalScore: reportData.technicalScore,
+        codingScore: reportData.codingScore,
+        communicationScore: reportData.communicationScore,
+        confidenceScore: reportData.confidenceScore,
+        categoryScores: categoryScores as any,
+        strengths: reportData.strengths,
+        improvements: reportData.improvements,
+        detailedFeedback: reportData.detailedFeedback,
+      },
+      create: {
         interviewId,
         overallScore: reportData.overallScore,
         technicalScore: reportData.technicalScore,
         codingScore: reportData.codingScore,
         communicationScore: reportData.communicationScore,
         confidenceScore: reportData.confidenceScore,
-        categoryScores,
+        categoryScores: categoryScores as any,
         strengths: reportData.strengths,
         improvements: reportData.improvements,
         detailedFeedback: reportData.detailedFeedback,

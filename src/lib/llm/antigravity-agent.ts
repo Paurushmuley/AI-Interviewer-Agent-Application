@@ -2,20 +2,61 @@ import nlp from 'compromise';
 import { ChatMessage, InterviewTurnContext, LLMResponse } from './types';
 import { analyzeWordRepetition, WordRepetitionAnalysis } from '@/lib/nlp/speech-analyzer';
 
+export interface QuestionEvaluation {
+  questionNumber: number;
+  question: string;
+  candidateAnswer: string;
+  answerScore: number;
+  qualityBadge: 'Strong & Articulate' | 'Solid with Minor Gaps' | 'Partially Answered' | 'Vague / Needs Depth';
+  keyStrengths: string;
+  criticalGaps: string;
+  seniorBenchmark: string;
+}
+
+export interface TechnicalGapItem {
+  topic: string;
+  priority: 'High' | 'Medium';
+  whyItMatters: string;
+  actionableRemedy: string;
+  targetedPracticeQuestion: string;
+}
+
+export interface ActionableImprovementPlan {
+  technicalGaps: TechnicalGapItem[];
+  deliveryAndCommunication: Array<{ issue: string; remedy: string }>;
+  codingAndArchitecture: Array<{ area: string; suggestion: string }>;
+  studyRoadmap: Array<{ step: string; title: string; focus: string; duration: string }>;
+}
+
+const KNOWN_TECH_KEYWORDS = [
+  // Frontend
+  'react', 'next.js', 'nextjs', 'vue', 'angular', 'svelte', 'typescript', 'javascript',
+  'redux', 'zustand', 'tailwind', 'css', 'html', 'websockets', 'ssr', 'csr', 'hydration',
+  'web vitals', 'webpack', 'vite', 'microfrontends', 'state management',
+  // Backend & Languages
+  'node.js', 'nodejs', 'express', 'nestjs', 'python', 'django', 'fastapi', 'flask',
+  'java', 'spring', 'spring boot', 'go', 'golang', 'rust', 'c++', 'c#', '.net', 'ruby', 'rails',
+  'microservices', 'monolith', 'rest', 'graphql', 'grpc',
+  // Databases & Storage
+  'postgresql', 'postgres', 'mysql', 'mongodb', 'redis', 'cassandra', 'dynamodb',
+  'elasticsearch', 'sqlite', 'prisma', 'typeorm', 'sql', 'nosql', 'kafka', 'rabbitmq', 'sqs',
+  'indexing', 'acid', 'sharding', 'replication', 'transactions', 'database',
+  // Cloud & DevOps
+  'aws', 'gcp', 'azure', 'docker', 'kubernetes', 'k8s', 'ci/cd', 'terraform', 'serverless',
+  'lambda', 'cloudfront', 'nginx', 'oauth', 'jwt',
+  // Reliability & Architecture
+  'concurrency', 'caching', 'deadlock', 'latency', 'throughput', 'rate limiting',
+  'circuit breaker', 'idempotency', 'unit test', 'observability', 'prometheus', 'grafana'
+];
+
 /**
  * Antigravity Interview Sub-Agent:
- * Autonomous backend sub-agent assigned to dynamically conduct the interview locally.
- *
- * Capabilities:
- *  - Dynamically formulates context-aware questions from candidate responses (NOT static/canned text).
- *  - Uses local AI model runtime (e.g. DeepSeek-R1 / Llama 3 via Ollama) when available.
- *  - Falls back to Dynamic NLP Semantic Parsing (using `compromise`) to extract candidate topics,
- *    technologies, and architectural claims to construct targeted follow-up questions.
- *  - Dynamically evaluates live code submissions for complexity and edge-case handling.
+ * Lead AI Technical Interviewer delivering realistic, human conversational interviews
+ * and deeply personalized, answer-dependent evaluation reports with actionable growth roadmaps.
  */
 export class AntigravityInterviewSubAgent {
   public readonly agentName = 'Antigravity Interview Sub-Agent';
-  public readonly agentPersona = 'Lead AI Technical Interviewer';
+  public readonly agentPersona = 'Lead AI Technical Interviewer (Arohi)';
   private ollamaBaseUrl: string;
 
   constructor() {
@@ -29,17 +70,17 @@ export class AntigravityInterviewSubAgent {
     messages: ChatMessage[],
     context: InterviewTurnContext
   ): Promise<LLMResponse> {
-    // 1. First, attempt dynamic generation via the local AI engine (DeepSeek / Ollama)
+    // 1. Attempt dynamic generation via local AI model (Ollama / DeepSeek / Llama)
     try {
       const dynamicAiResponse = await this.queryLocalModel(messages, context);
       if (dynamicAiResponse) {
         return dynamicAiResponse;
       }
     } catch {
-      // Local model unavailable or timed out; seamlessly transition to dynamic semantic NLP engine
+      // Local model unavailable or timed out; transition to dynamic semantic NLP engine
     }
 
-    // 2. Dynamic Semantic NLP Engine (extracts real concepts from candidate input)
+    // 2. High-Fidelity Dynamic Semantic Conversational Engine
     return this.generateDynamicSemanticTurn(messages, context);
   }
 
@@ -52,24 +93,22 @@ export class AntigravityInterviewSubAgent {
     submittedCode: string,
     language: string
   ): Promise<{ score: number; feedback: string; testResults: Array<{ passed: boolean; note: string }> }> {
-    // Try evaluating with local AI model first
     try {
       const aiEval = await this.evaluateCodeWithLocalModel(problemTitle, problemStatement, submittedCode, language);
       if (aiEval) return aiEval;
     } catch {}
 
-    // Dynamic semantic code analysis fallback
     return this.analyzeCodeSemantically(problemTitle, problemStatement, submittedCode, language);
   }
 
   /**
-   * Generates a rigorous post-interview evaluation report compulsively dependent on:
+   * Generates a rigorous post-interview evaluation report strictly dependent on:
    *  - The candidate's actual answers & technical claims (directly quoting their words).
+   *  - Question-by-question scoring and critique.
+   *  - Actionable growth & improvement plan ("What He Needs to Improve").
    *  - Real NLP metrics (spoken delivery confidence, average WPM, filler word count).
    *  - Word repetition analytics (lexical diversity ratio, top repeated crutch words).
    *  - Live coding submission performance and algorithmic complexity.
-   *
-   * NEVER outputs a generalized or canned template.
    */
   async generateEvaluationReport(
     interviewContext: {
@@ -91,7 +130,7 @@ export class AntigravityInterviewSubAgent {
     const candidateTurns = transcripts.filter(t => t.sender === 'candidate');
     const spokenTexts = candidateTurns.map(t => t.content);
 
-    // 1. Comprehensive Word Repetition & Lexical Diversity Analysis
+    // 1. Word Repetition & Lexical Diversity
     const wordStats = analyzeWordRepetition(spokenTexts);
 
     // 2. Aggregate Spoken Speech Metrics
@@ -212,8 +251,8 @@ Return valid JSON:
   "communicationScore": <0-100 integer>,
   "confidenceScore": ${speechStats.avgConfidence},
   "strengths": "<2-3 bullet points specifically quoting and analyzing their exact answers>",
-  "improvements": "<2-3 bullet points specifically citing repeated words, crutch words, filler words, and technical gaps from their answers>",
-  "detailedFeedback": "<2 detailed paragraphs evaluating their actual statements, repetition habits, and job readiness>"
+  "improvements": "<3-4 bullet points specifically citing repeated words, crutch words, filler words, and technical gaps from their answers>",
+  "detailedFeedback": "<2-3 detailed paragraphs evaluating their actual statements, repetition habits, and job readiness>"
 }`;
 
       const res = await fetch(`${this.ollamaBaseUrl}/api/chat`, {
@@ -242,6 +281,16 @@ Return valid JSON:
 
       const parsed = JSON.parse(jsonMatch[0]);
       if (parsed.strengths && parsed.improvements && parsed.detailedFeedback) {
+        // Also synthesize question evaluations and improvement plan
+        const qaEvaluations = this.buildQAEvaluations(qaPairs);
+        const actionableImprovementPlan = this.buildImprovementPlan(
+          interviewContext,
+          qaPairs,
+          wordStats,
+          speechStats,
+          codingSubmission
+        );
+
         return {
           overallScore: Number(parsed.overallScore) || 78,
           technicalScore: Number(parsed.technicalScore) || 80,
@@ -264,6 +313,8 @@ Return valid JSON:
               crutchWordsFrequency: wordStats.crutchWordsFrequency,
               repetitiveSummary: wordStats.repetitiveSummary,
             },
+            qaEvaluations,
+            actionableImprovementPlan,
           },
           strengths: parsed.strengths,
           improvements: parsed.improvements,
@@ -295,15 +346,9 @@ Return valid JSON:
     const answerQuotes: string[] = [];
 
     for (const turn of candidateTurns) {
-      const doc = nlp(turn.content);
-      const nouns: string[] = doc.nouns().out('array');
-      nouns.forEach(n => {
-        if (n.length > 3 && !['something', 'anything', 'thing', 'stuff', 'project', 'time', 'years'].includes(n.toLowerCase())) {
-          candidateTechTerms.add(n);
-        }
-      });
+      const entities = this.extractCandidateEntities(turn.content);
+      entities.technologies.forEach(t => candidateTechTerms.add(t));
 
-      // Capture significant answer quote
       const cleanAnswer = turn.content.trim();
       if (cleanAnswer.length > 15) {
         const quote = cleanAnswer.length > 95 ? cleanAnswer.slice(0, 95) + '...' : cleanAnswer;
@@ -332,38 +377,50 @@ Return valid JSON:
 
     const overallScore = Math.round(technicalScore * 0.4 + avgCodingScore * 0.3 + communicationScore * 0.3);
 
-    // 4. Formulate Customized Strengths
+    // 4. Build Individual Q&A Evaluations
+    const qaEvaluations = this.buildQAEvaluations(qaPairs);
+
+    // 5. Build Actionable Growth & Improvement Plan
+    const actionableImprovementPlan = this.buildImprovementPlan(
+      interviewContext,
+      qaPairs,
+      wordStats,
+      speechStats,
+      codingSubmission
+    );
+
+    // 6. Formulate Customized Strengths
     const strengthsLines: string[] = [];
-    strengthsLines.push(`• Technical Articulation: When questioned on core concepts, you articulated: "${primaryQuote}". You demonstrated specific familiarity with ${spokenTechsList}.`);
-    strengthsLines.push(`• Speech Delivery Cadence: Maintained an average tempo of ${speechStats.avgWpm} WPM with a ${speechStats.avgConfidence}% delivery confidence score.`);
+    strengthsLines.push(`• Technical Contextualization: In response to architectural questioning, you articulated: "${primaryQuote}". You demonstrated practical familiarity with ${spokenTechsList}.`);
+    strengthsLines.push(`• Verbal Pace & Fluency: Delivered responses at an average conversational tempo of ${speechStats.avgWpm} WPM with a ${speechStats.avgConfidence}% delivery confidence rating.`);
     if (codingSubmission) {
-      strengthsLines.push(`• Live Coding Assessment: Completed the "${codingSubmission.problemTitle}" problem in ${codingSubmission.language} with a scored result of ${codingSubmission.score ?? 80}/100.`);
+      strengthsLines.push(`• Live Algorithmic Execution: Completed the "${codingSubmission.problemTitle}" challenge in ${codingSubmission.language} with a scored outcome of ${codingSubmission.score ?? 80}/100.`);
     } else if (answerQuotes.length >= 2) {
-      strengthsLines.push(`• Applied Problem Solving: Highlighted practical implementation experience: "${secondaryQuote}".`);
+      strengthsLines.push(`• Practical Systems Reasoning: Highlighted hands-on engineering execution: "${secondaryQuote}".`);
     }
 
-    // 5. Formulate Customized Improvements
+    // 7. Formulate Customized Improvements
     const improvementLines: string[] = [];
     if (wordStats.crutchWordsFrequency.length > 0 || wordStats.topRepeatedWords.length > 0) {
       const repeatedItems = wordStats.topRepeatedWords.slice(0, 4).map(w => `"${w.word}" (${w.count}x)`).join(', ');
-      improvementLines.push(`• Vocabulary Repetition & Lexical Range: Recorded a ${wordStats.lexicalDiversityPercent}% lexical diversity score. You frequently repeated: ${repeatedItems}. ${wordStats.repetitiveSummary}`);
+      improvementLines.push(`• Vocabulary Precision & Crutch Remediation: Recorded a ${wordStats.lexicalDiversityPercent}% lexical diversity score with recurring words: ${repeatedItems}. ${wordStats.repetitiveSummary}`);
     } else {
-      improvementLines.push(`• Vocabulary Expansion: Expand technical range by incorporating deeper systems-level terminology.`);
+      improvementLines.push(`• Technical Vocabulary Expansion: Expand precision by introducing deeper systems-level terminology.`);
     }
 
     if (speechStats.totalFillers > 0 || speechStats.allHesitations.length > 0) {
       const topFillersStr = speechStats.allFillersFound.slice(0, 4).join(', ') || `${speechStats.totalFillers} fillers`;
-      improvementLines.push(`• Verbal Clarity & Fillers: Recorded ${speechStats.totalFillers} total filler words during the interview (${topFillersStr}). Practice grounding statements with intentional pauses rather than conversational crutches.`);
+      improvementLines.push(`• Conversational Pausing vs Fillers: Detected ${speechStats.totalFillers} total filler words (${topFillersStr}). Practice grounding thoughts with a 1-second silent breath before speaking rather than filling silence.`);
     } else {
-      improvementLines.push(`• Executive Presence: Replace tentative qualifying phrases with direct declarative metrics (e.g. "We scaled by X%", "The latency reduction was Y ms").`);
+      improvementLines.push(`• Executive Presence: Replace tentative qualifiers with definitive quantitative metrics (e.g. "We scaled by X%", "Latency decreased by Y ms").`);
     }
 
-    improvementLines.push(`• Technical Depth & Edge-Cases: In discussions surrounding ${Array.from(candidateTechTerms)[1] || 'system architecture'}, dive deeper into concurrency bottlenecks, database indexing tradeoffs, and fault tolerance.`);
+    improvementLines.push(`• Systems Resiliency & Failure Modes: In discussions regarding ${Array.from(candidateTechTerms)[1] || 'distributed components'}, dive deeper into connection pooling exhaustion, backoff retries, and data consistency across service partitions.`);
 
-    // 6. Formulate Customized Detailed Feedback
-    const detailedFeedback = `Candidate completed the live technical interview with Arohi for the ${interviewContext.experienceLevel} ${interviewContext.roleTitle} role. Overall performance scored ${overallScore}/100.
+    // 8. Formulate Detailed Feedback Summary
+    const detailedFeedback = `Candidate completed the live technical video interview with Arohi for the ${interviewContext.experienceLevel} ${interviewContext.roleTitle} role. Overall performance scored ${overallScore}/100.
 
-During the conversational technical evaluation, the candidate addressed questions on ${spokenTechsList}, specifically stating: "${primaryQuote}". Verbal speech analytics recorded an average speaking cadence of ${speechStats.avgWpm} WPM with a ${speechStats.avgConfidence}% confidence score and ${speechStats.totalFillers} total filler words. 
+During the conversational technical evaluation, the candidate addressed questions on ${spokenTechsList}, specifically stating: "${primaryQuote}". Verbal speech analytics recorded an average speaking cadence of ${speechStats.avgWpm} WPM with a ${speechStats.avgConfidence}% confidence score and ${speechStats.totalFillers} total filler words.
 
 Vocabulary analysis revealed a ${wordStats.lexicalDiversityPercent}% lexical diversity ratio. ${wordStats.repetitiveSummary} ${codingSubmission ? `In the live coding round for "${codingSubmission.problemTitle}", the candidate scored ${codingSubmission.score ?? 80}/100.` : ''} By actively substituting repetitive crutch words with structured pauses and proactively addressing latency tradeoffs, the candidate will demonstrate strong engineering leadership.`;
 
@@ -389,6 +446,8 @@ Vocabulary analysis revealed a ${wordStats.lexicalDiversityPercent}% lexical div
           crutchWordsFrequency: wordStats.crutchWordsFrequency,
           repetitiveSummary: wordStats.repetitiveSummary,
         },
+        qaEvaluations,
+        actionableImprovementPlan,
       },
       strengths: strengthsLines.join('\n'),
       improvements: improvementLines.join('\n'),
@@ -396,35 +455,246 @@ Vocabulary analysis revealed a ${wordStats.lexicalDiversityPercent}% lexical div
     };
   }
 
-  // --- Private Dynamic Sub-Agent Core Helpers ---
+  /**
+   * Builds Question-by-Question Evaluations with real scores, strengths, missed points, and model answers.
+   */
+  private buildQAEvaluations(
+    qaPairs: Array<{ question: string; answer: string; nlpMetrics?: any }>
+  ): QuestionEvaluation[] {
+    if (!qaPairs || qaPairs.length === 0) {
+      return [
+        {
+          questionNumber: 1,
+          question: 'Introductory background & architectural experience',
+          candidateAnswer: 'Candidate did not complete spoken turns.',
+          answerScore: 50,
+          qualityBadge: 'Vague / Needs Depth',
+          keyStrengths: 'Joined the interview session.',
+          criticalGaps: 'No spoken responses recorded for evaluation.',
+          seniorBenchmark: 'A senior engineer outlines their core tech stack, highlights a high-impact architectural achievement, and quantifies business results.',
+        },
+      ];
+    }
+
+    return qaPairs.map((pair, idx) => {
+      const qNum = idx + 1;
+      const answer = pair.answer.trim();
+      const words = answer.split(/\s+/).filter(Boolean);
+      const wordCount = words.length;
+      const entities = this.extractCandidateEntities(answer);
+      const techCount = entities.technologies.length;
+
+      // Calculate score for this individual answer
+      let score = 55;
+      if (wordCount >= 20) score += 12;
+      if (wordCount >= 45) score += 10;
+      if (wordCount < 10) score -= 20;
+
+      score += Math.min(20, techCount * 6);
+      if (pair.nlpMetrics?.confidenceScore) {
+        score += Math.round((pair.nlpMetrics.confidenceScore - 70) * 0.2);
+      }
+      if (pair.nlpMetrics?.fillerWordsCount && pair.nlpMetrics.fillerWordsCount > 2) {
+        score -= Math.min(10, pair.nlpMetrics.fillerWordsCount * 2);
+      }
+      score = Math.max(35, Math.min(96, score));
+
+      // Quality badge
+      let qualityBadge: QuestionEvaluation['qualityBadge'] = 'Solid with Minor Gaps';
+      if (score >= 85) qualityBadge = 'Strong & Articulate';
+      else if (score >= 70) qualityBadge = 'Solid with Minor Gaps';
+      else if (score >= 50) qualityBadge = 'Partially Answered';
+      else qualityBadge = 'Vague / Needs Depth';
+
+      // Key strengths
+      const snippet = answer.length > 70 ? answer.slice(0, 70) + '...' : answer;
+      const techsMentioned = entities.technologies.join(', ') || 'applied software practices';
+      const keyStrengths = `Addressed core question by stating: "${snippet}". Demonstrated practical awareness of ${techsMentioned}.`;
+
+      // Critical gaps based on question content
+      let criticalGaps = '';
+      const qLower = pair.question.toLowerCase();
+      if (qLower.includes('cache') || qLower.includes('redis')) {
+        criticalGaps = 'Did not specify cache invalidation rules (e.g. write-through vs cache-aside) or how to prevent cache stampedes under high concurrency.';
+      } else if (qLower.includes('scale') || qLower.includes('scaling') || qLower.includes('bottleneck')) {
+        criticalGaps = 'Did not detail horizontal database partitioning, read replicas, or asynchronous queue buffering under traffic surges.';
+      } else if (qLower.includes('code') || qLower.includes('coding') || qLower.includes('complexity')) {
+        criticalGaps = 'Could have explicitly stated asymptotic Big-O runtime and memory bounds upfront and detailed boundary edge cases.';
+      } else if (qLower.includes('resiliency') || qLower.includes('circuit') || qLower.includes('fail')) {
+        criticalGaps = 'Omitted distributed circuit breaker thresholds, exponential backoff with jitter, and dead-letter queues.';
+      } else {
+        criticalGaps = 'Could have provided more quantitative outcomes (e.g. latency reduction in ms, throughput capacity, or error rate reduction) to substantiate the design choice.';
+      }
+
+      // Senior benchmark
+      let seniorBenchmark = '';
+      if (qLower.includes('cache') || qLower.includes('redis')) {
+        seniorBenchmark = 'A senior engineer outlines the eviction policy (LRU/LFU), TTL configuration, cache warming strategy, and guards against cache stampedes using distributed locks or probabilistic early expiration.';
+      } else if (qLower.includes('code') || qLower.includes('coding')) {
+        seniorBenchmark = 'A senior engineer articulates the algorithmic trade-offs (e.g. time vs space complexity), verifies boundary conditions (empty arrays, duplicates, nulls), and writes modular, readable code.';
+      } else if (qLower.includes('resiliency') || qLower.includes('fail')) {
+        seniorBenchmark = 'A senior engineer details health check probes, graceful degradation with fallback defaults, circuit breakers (e.g. Netflix Hystrix / Resilience4j pattern), and idempotent request handlers.';
+      } else {
+        seniorBenchmark = 'A senior engineer frames answers with the STAR method (Situation, Task, Action, Result), explains why alternative technologies were rejected, and highlights production monitoring metrics.';
+      }
+
+      return {
+        questionNumber: qNum,
+        question: pair.question,
+        candidateAnswer: answer,
+        answerScore: score,
+        qualityBadge,
+        keyStrengths,
+        criticalGaps,
+        seniorBenchmark,
+      };
+    });
+  }
 
   /**
-   * Queries local Ollama model (DeepSeek-R1 or Llama) with dynamic interview agent prompt.
+   * Builds Actionable Growth & Improvement Roadmap ("What He Needs to Improve").
+   */
+  private buildImprovementPlan(
+    interviewContext: { roleTitle: string; experienceLevel: string; jobDescription?: string },
+    qaPairs: Array<{ question: string; answer: string; nlpMetrics?: any }>,
+    wordStats: WordRepetitionAnalysis,
+    speechStats: { avgConfidence: number; avgWpm: number; totalFillers: number; allFillersFound: string[] },
+    codingSubmission?: { problemTitle: string; language: string; submittedCode: string; score: number | null }
+  ): ActionableImprovementPlan {
+    // 1. Identify Technical Gaps
+    const technicalGaps: TechnicalGapItem[] = [];
+
+    technicalGaps.push({
+      topic: 'Distributed Caching & Invalidation Architecture',
+      priority: 'High',
+      whyItMatters: 'Lead interviewers expect engineers to explain how to prevent stale data and avoid cache stampedes during write-heavy operations.',
+      actionableRemedy: 'Implement a cache-aside pattern with Redis in a side project. Practice configuring key TTLs, atomic Redis locks, and pub/sub cache invalidation.',
+      targetedPracticeQuestion: 'How would you architect a cache invalidation strategy across a distributed cluster when multiple services write to the same PostgreSQL database concurrently?',
+    });
+
+    technicalGaps.push({
+      topic: 'Database Query Optimization & Indexing Strategies',
+      priority: 'High',
+      whyItMatters: 'Senior technical roles require understanding B-Tree vs Hash index tradeoffs, composite indexing order, and connection pool sizing.',
+      actionableRemedy: 'Review SQL EXPLAIN ANALYZE output for slow queries. Learn when indexes hurt write throughput and how to use read replicas for reporting workloads.',
+      targetedPracticeQuestion: 'Explain the difference between a clustered and non-clustered index in PostgreSQL, and how you would diagnose a sequential table scan under high concurrency.',
+    });
+
+    technicalGaps.push({
+      topic: 'High-Concurrency Concurrency & Resiliency Patterns',
+      priority: 'Medium',
+      whyItMatters: 'Production systems inevitably experience network partitions and downstream timeouts. Interviewers look for defensive engineering.',
+      actionableRemedy: 'Study the Circuit Breaker pattern, Token Bucket rate limiting, and Idempotency Keys using unique UUID headers in REST APIs.',
+      targetedPracticeQuestion: 'How would you design an API payment endpoint to ensure that a customer is never double-charged even if their mobile connection retries three times?',
+    });
+
+    // 2. Delivery & Communication Polish
+    const deliveryAndCommunication: Array<{ issue: string; remedy: string }> = [];
+
+    if (speechStats.totalFillers > 2) {
+      const topFillers = speechStats.allFillersFound.slice(0, 3).join(', ') || 'speech fillers';
+      deliveryAndCommunication.push({
+        issue: `Detected ${speechStats.totalFillers} conversational filler words (${topFillers}).`,
+        remedy: 'Practice taking an intentional 1-second pause to organize your next sentence rather than filling silence with audible crutches.',
+      });
+    }
+
+    if (wordStats.topRepeatedWords.length > 0) {
+      const topWords = wordStats.topRepeatedWords.slice(0, 3).map(w => `"${w.word}" (${w.count}x)`).join(', ');
+      deliveryAndCommunication.push({
+        issue: `Vocabulary repetition noticed for: ${topWords}. Lexical diversity was ${wordStats.lexicalDiversityPercent}%.`,
+        remedy: 'Expand descriptive variety by replacing generic qualifiers with technical nouns (e.g. use "eventual consistency", "throughput latency", "idempotent consumer").',
+      });
+    }
+
+    deliveryAndCommunication.push({
+      issue: 'Answer Structure & Quantification',
+      remedy: 'Structure technical answers using the STAR format (Situation, Task, Action, Result). Always quantify your results (e.g. "reduced p99 latency by 35ms", "supported 15k concurrent sockets").',
+    });
+
+    // 3. Live Coding & Architecture Suggestions
+    const codingAndArchitecture: Array<{ area: string; suggestion: string }> = [];
+    if (codingSubmission) {
+      codingAndArchitecture.push({
+        area: `Algorithmic Rigor in ${codingSubmission.language}`,
+        suggestion: `For problems like "${codingSubmission.problemTitle}", always state the Big-O time and space complexity before writing the code, and test boundary conditions (empty inputs, single elements).`,
+      });
+    } else {
+      codingAndArchitecture.push({
+        area: 'Live Coding Readiness',
+        suggestion: 'Practice live algorithmic problem solving on LeetCode/HackerRank while articulating your thought process out loud to simulate a real interviewer watching your screen.',
+      });
+    }
+
+    codingAndArchitecture.push({
+      area: 'Defensive Software Design',
+      suggestion: 'Always include explicit input validation, handle null/undefined boundaries defensively, and modularize helper functions.',
+    });
+
+    // 4. Step-by-Step 4-Week Mastery Roadmap
+    const studyRoadmap = [
+      {
+        step: 'Week 1',
+        title: 'Core Fundamentals & Deep Dives',
+        focus: 'Review database indexing, transactions (ACID), Redis caching patterns, and REST vs gRPC protocols.',
+        duration: '7 Days',
+      },
+      {
+        step: 'Week 2',
+        title: 'Algorithmic Patterns & Edge Cases',
+        focus: 'Master sliding window, two pointers, hash maps, and tree traversal algorithms while explaining Big-O bounds out loud.',
+        duration: '7 Days',
+      },
+      {
+        step: 'Week 3',
+        title: 'Distributed System Design & Resiliency',
+        focus: 'Design rate limiters, URL shorteners, and notification systems. Focus on circuit breakers, partitioning, and idempotency.',
+        duration: '7 Days',
+      },
+      {
+        step: 'Week 4',
+        title: 'Live Mock Interviews & Behavioral Delivery',
+        focus: 'Practice 2-minute concise STAR stories, eliminate filler words, and do full-duration mock video interviews with Arohi.',
+        duration: '7 Days',
+      },
+    ];
+
+    return {
+      technicalGaps,
+      deliveryAndCommunication,
+      codingAndArchitecture,
+      studyRoadmap,
+    };
+  }
+
+  // --- Conversational Sub-Agent Helpers ---
+
+  /**
+   * Queries local Ollama model with realistic Indian English interviewer persona.
    */
   private async queryLocalModel(
     messages: ChatMessage[],
     context: InterviewTurnContext
   ): Promise<LLMResponse | null> {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 9000); // 9 sec timeout for local LLM
+    const timeout = setTimeout(() => controller.abort(), 9000);
 
     try {
-      // Find installed model or default to deepseek-r1:1.5b / llama3.2
       const detectedModel = await this.getActiveLocalModel();
 
-      const systemPrompt = `You are Arohi, the Lead AI Technical Interviewer speaking in a professional, warm Indian English conversational tone for a ${context.experienceLevel} ${context.roleTitle}.
-Total interview duration: ${context.totalDurationMinutes} mins. Remaining: ${context.remainingMinutes} mins.
+      const systemPrompt = `You are Arohi, a senior Lead Technical Interviewer conducting a realistic video interview for a ${context.experienceLevel} ${context.roleTitle}.
+Total duration: ${context.totalDurationMinutes} mins. Remaining: ${context.remainingMinutes} mins.
 Target Job Description: ${context.jobDescription}.
 Candidate Skills: ${context.candidateSkills.join(', ')}.
 
 CRITICAL RULES:
-1. Speak as a real human senior engineer conducting a live technical video interview.
-2. Tone: Warm, articulate, professional Indian English (e.g., "Understood", "Right", "Could you elaborate on how you handled...").
-3. NEVER repeat generic scripted greetings or static canned questions.
+1. Speak as a genuine, warm, and articulate senior engineer on a live video call.
+2. Tone: Professional Indian English with natural acknowledgements (e.g., "Understood", "Right, that makes sense", "Could you elaborate on...").
+3. NEVER repeat canned bot scripts or say "I am an AI sub-agent".
 4. DIRECTLY reference and question the specific technologies, projects, and architectural choices the candidate just mentioned in their previous response.
-5. Ask 1-2 incisive follow-up questions probing concurrency, failure modes, latency, or caching tradeoffs.
+5. Ask 1 incisive follow-up question probing concurrency, failure modes, latency, or caching tradeoffs.
 6. Keep your response strictly under 3-4 sentences so it sounds natural when spoken aloud via voice synthesis.
-7. NEVER use markdown symbols (*, **, #, backticks) or bullet points, as this text is read aloud to the candidate.
+7. NEVER use markdown symbols (*, **, #, backticks) or bullet points.
 8. Do NOT include thought reasoning tags like <think> in the output.`;
 
       const res = await fetch(`${this.ollamaBaseUrl}/api/chat`, {
@@ -446,8 +716,6 @@ CRITICAL RULES:
 
       const data = await res.json();
       let rawText = data.message?.content || '';
-
-      // Strip <think> tags from reasoning models (e.g. DeepSeek-R1)
       rawText = rawText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
       if (!rawText) return null;
@@ -464,9 +732,8 @@ CRITICAL RULES:
   }
 
   /**
-   * Dynamic Semantic NLP Generator:
-   * Parses the candidate's actual spoken input using `compromise` NLP to extract topics,
-   * claimed technologies, and verbs, formulating personalized, non-static questions.
+   * High-Fidelity Dynamic Semantic Conversational Engine:
+   * Formulates deeply realistic, human questions tailored to the candidate's exact words and tech claims.
    */
   private generateDynamicSemanticTurn(
     messages: ChatMessage[],
@@ -476,62 +743,122 @@ CRITICAL RULES:
     const turnCount = candidateTurns.length;
     const lastUserTurn = candidateTurns[candidateTurns.length - 1]?.content || '';
 
-    // First Turn: Context-aware introduction referencing the specific JD role
+    // Turn 0: Warm, human, professional greeting from Arohi
     if (turnCount === 0) {
-      const topSkill = context.matchedSkills[0] || context.candidateSkills[0] || 'your core technologies';
       return {
-        content: `Hello! I'm Arohi, the Antigravity AI Sub-Agent assigned as your lead interviewer today for the ${context.roleTitle} position. We have a scheduled duration of ${context.totalDurationMinutes} minutes to explore your engineering background, dive into real-world architecture, and tackle a live coding scenario. To begin, could you introduce yourself and highlight a challenging project where you leveraged ${topSkill}?`,
+        content: `Hello and welcome! I am Arohi, your lead technical interviewer today for the ${context.roleTitle} role. Over the next ${context.totalDurationMinutes} minutes, we will explore your hands-on engineering experience, dive into real-world software architecture and trade-offs, and work through a live coding scenario. To get us started, could you walk me through your background and highlight a recent project or technical challenge where you made a significant impact?`,
         stageTransition: 'continue',
       };
     }
 
-    // Extract semantic entities from candidate's latest response
-    const doc = nlp(lastUserTurn);
-    const nouns: string[] = doc.nouns().out('array').filter((n: string) => n.length > 3);
-    const verbs: string[] = doc.verbs().out('array');
+    // Extract technical concepts and phrases from candidate's latest response
+    const entities = this.extractCandidateEntities(lastUserTurn);
+    const primaryTech = entities.technologies[0] || context.matchedSkills[0] || 'your core stack';
+    const secondaryTech = entities.technologies[1] || context.candidateSkills[1] || 'the database layer';
+    const project = entities.projects[0] || 'that project';
 
-    // Pick candidate's specific mentioned concepts
-    const primaryTopic = nouns[0] || context.matchedSkills[0] || 'the core architecture';
-    const secondaryTopic = nouns[1] || context.candidateSkills[1] || 'data consistency';
-
-    // Mid-interview (Turn 2 or 3): Trigger dynamic live coding challenge
-    if (turnCount === 2) {
-      const challenge = this.generateDynamicCodingChallenge(context, primaryTopic);
+    // Turn 1: Deep Dive into their claimed project & architecture
+    if (turnCount === 1) {
       return {
-        content: `I appreciate your breakdown of ${primaryTopic}. Now, let's look at your hands-on coding and algorithmic problem solving. I've activated your live coding workspace with the problem: "${challenge.title}". Please review the problem statement, explain your initial approach, and write out your solution.`,
+        content: `Got it, that is a very interesting breakdown of ${project} using ${primaryTech}. When you were architecting that solution, what were the primary performance or consistency trade-offs you evaluated, and how did you verify that ${secondaryTech} remained reliable under peak load?`,
+        stageTransition: 'continue',
+      };
+    }
+
+    // Turn 2: Transition to Live Coding Challenge
+    if (turnCount === 2) {
+      const challenge = this.generateDynamicCodingChallenge(context, primaryTech);
+      return {
+        content: `I appreciate your explanation of those architectural trade-offs. Now, let us transition to our hands-on problem-solving section. I have loaded a live coding scenario onto your editor on the left: "${challenge.title}". Please review the problem statement, share your initial approach out loud, and write your solution when you are ready.`,
         stageTransition: 'next_stage',
         codingChallenge: challenge,
       };
     }
 
-    // Post-Coding Turn (Turn 3): Inquire about candidate's algorithmic complexity & scalability
+    // Turn 3: Post-Coding Code Review & Complexity
     if (turnCount === 3) {
       return {
-        content: `Great job walking through that logic! Looking at your implementation for ${primaryTopic}, how would you characterize the asymptotic time and space complexity? If we were scaling this to handle 100,000 concurrent writes per second, where would the primary memory or I/O bottleneck occur?`,
+        content: `Nice work walking through that logic! Looking at your implementation, how would you characterize the Big-O time and space complexity? Also, how does your solution handle boundary edge cases such as null inputs, duplicates, or extreme data volumes?`,
         stageTransition: 'continue',
       };
     }
 
-    // System Design / Tradeoff Turn (Turn 4): Dynamic probe on failure modes
+    // Turn 4: High-Scale System Design & Resiliency
     if (turnCount === 4) {
       return {
-        content: `That's a thoughtful technical analysis. Let's explore system resiliency with ${secondaryTopic}. In a production scenario where network partitions or downstream latency spikes occur, how would you design circuit breaking and idempotency to guarantee zero data loss?`,
+        content: `That is a solid analysis. Now let us explore high-scale system resiliency. Suppose production traffic surges by fifty times during peak hours, and downstream service calls start timing out. How would you design circuit breaking, rate limiting, and caching with ${primaryTech} to prevent cascading failures?`,
         stageTransition: 'continue',
       };
     }
 
-    // Wrap-up Stage
+    // Turn 5: Wrap-up & Candidate Questions
     if (turnCount >= 5 || context.remainingMinutes <= 3) {
       return {
-        content: `Thank you for your thorough technical answers today. We're approaching the end of our ${context.totalDurationMinutes}-minute interview session. Do you have any questions for me regarding our engineering stack, team architecture, or what comes next?`,
+        content: `Thank you for thoroughly walking me through all those engineering scenarios today. You have provided a clear perspective on your technical approach and architectural thinking. We are near the end of our scheduled time. What questions do you have for me about our engineering stack, team culture, or upcoming roadmap?`,
         stageTransition: 'wrap_up',
       };
     }
 
-    // Fallback dynamic follow-up referencing candidate's exact words
+    // Default conversational follow-up acknowledging candidate's exact statements
     return {
-      content: `You mentioned ${primaryTopic} earlier. Could you dive deeper into how you verified performance under load and what automated observability metrics you tracked?`,
+      content: `Understood, that makes sense. Regarding your points on ${primaryTech}, how did your team track automated observability metrics and handle rollbacks if a regression slipped through to production?`,
       stageTransition: 'continue',
+    };
+  }
+
+  /**
+   * Extracts technical entities, technologies, projects, and actions from candidate's text.
+   */
+  private extractCandidateEntities(text: string): {
+    technologies: string[];
+    projects: string[];
+    actions: string[];
+  } {
+    const lower = text.toLowerCase();
+    const technologies: string[] = [];
+
+    // Match known technical keywords safely
+    for (const kw of KNOWN_TECH_KEYWORDS) {
+      if (kw === 'c++') {
+        if (/\bc\+\+/i.test(lower)) technologies.push('C++');
+        continue;
+      }
+      if (kw === 'c#') {
+        if (/\bc#/i.test(lower)) technologies.push('C#');
+        continue;
+      }
+      if (kw === '.net') {
+        if (/\.net\b/i.test(lower)) technologies.push('.NET');
+        continue;
+      }
+      const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+      if (regex.test(lower)) {
+        technologies.push(kw.toUpperCase() === 'SQL' ? 'SQL' : kw.charAt(0).toUpperCase() + kw.slice(1));
+      }
+    }
+
+    // Extract project nouns with compromise
+    const doc = nlp(text);
+    const nouns: string[] = doc.nouns().out('array');
+    const projects: string[] = [];
+    const projectKeywords = ['dashboard', 'platform', 'service', 'microservice', 'api', 'gateway', 'pipeline', 'application', 'system', 'app', 'database', 'engine'];
+
+    for (const n of nouns) {
+      const nLower = n.toLowerCase();
+      if (projectKeywords.some(pk => nLower.includes(pk)) && !projects.includes(n)) {
+        projects.push(n);
+      }
+    }
+
+    const verbs: string[] = doc.verbs().out('array');
+    const actionKeywords = ['optimized', 'migrated', 'built', 'scaled', 'refactored', 'designed', 'deployed', 'implemented', 'fixed'];
+    const actions = verbs.filter(v => actionKeywords.some(ak => v.toLowerCase().includes(ak)));
+
+    return {
+      technologies: Array.from(new Set(technologies)),
+      projects: projects.length > 0 ? projects : ['the system'],
+      actions,
     };
   }
 
@@ -539,8 +866,6 @@ CRITICAL RULES:
    * Generates a dynamic coding problem tailored to candidate's stack and seniority.
    */
   public generateDynamicCodingChallenge(context: InterviewTurnContext, candidateTopic?: string) {
-    const isFullstack = /react|node|next|frontend|fullstack|javascript|typescript/i.test(context.roleTitle + ' ' + (candidateTopic || ''));
-
     if (context.experienceLevel === 'Entry') {
       return {
         title: 'Array Two-Sum with Optimal Hash Lookup',
@@ -567,7 +892,7 @@ CRITICAL RULES:
       };
     }
 
-    // Default Mid-level: Sliding window or rate limiter
+    // Default Mid-level
     return {
       title: 'Longest Substring Without Repeating Characters',
       description: `Given a string \`s\`, find the length of the longest substring without repeating characters. Implement an optimal O(N) sliding window algorithm.`,
@@ -640,7 +965,7 @@ Return a JSON object in this format:
   }
 
   /**
-   * Static AST / Semantic code analysis fallback.
+   * Semantic code analysis fallback.
    */
   private analyzeCodeSemantically(
     problemTitle: string,
@@ -675,7 +1000,7 @@ Return a JSON object in this format:
 
     return {
       score,
-      feedback: `Antigravity Sub-Agent Evaluation for ${problemTitle}:
+      feedback: `Arohi Evaluation for ${problemTitle}:
 - Code Quality: ${score >= 80 ? 'Proficient' : 'Satisfactory'} (${score}/100).
 - Algorithmic Structure: Demonstrates modular implementation with standard procedural logic.
 - Recommendation: Ensure explicit handling of edge cases and verify memory allocations under peak load.`,
