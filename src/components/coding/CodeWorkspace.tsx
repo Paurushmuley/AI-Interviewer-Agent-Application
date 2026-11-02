@@ -58,19 +58,19 @@ export const CodeWorkspace: React.FC<CodeWorkspaceProps> = ({
   return (
     <div className="flex flex-col h-full bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
       {/* Top Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <Code2 className="w-5 h-5 text-blue-400" />
-          <h3 className="text-sm font-semibold text-slate-100">{problemTitle}</h3>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-900 border-b border-slate-800">
+        <div className="flex items-center gap-2 max-w-full truncate">
+          <Code2 className="w-4 sm:w-5 h-4 sm:h-5 text-blue-400 shrink-0" />
+          <h3 className="text-xs sm:text-sm font-semibold text-slate-100 truncate">{problemTitle}</h3>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end">
           <select
             value={language}
             onChange={e => setLanguage(e.target.value)}
             className="bg-slate-800 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
-            <option value="javascript">JavaScript (Node.js)</option>
+            <option value="javascript">JavaScript</option>
             <option value="typescript">TypeScript</option>
             <option value="python">Python 3</option>
           </select>
@@ -78,7 +78,7 @@ export const CodeWorkspace: React.FC<CodeWorkspaceProps> = ({
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition-colors shadow-md"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition-colors shadow-md shrink-0"
           >
             {isSubmitting ? (
               <>
@@ -94,9 +94,9 @@ export const CodeWorkspace: React.FC<CodeWorkspaceProps> = ({
       </div>
 
       {/* Main Workspace Split */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 overflow-hidden min-h-[420px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 overflow-hidden min-h-[300px] sm:min-h-[420px]">
         {/* Left Column: Problem & Examples (5 cols) */}
-        <div className="lg:col-span-5 p-4 border-r border-slate-800 overflow-y-auto space-y-4 bg-slate-900/40">
+        <div className="lg:col-span-5 p-3 sm:p-4 border-b lg:border-b-0 lg:border-r border-slate-800 overflow-y-auto max-h-[190px] sm:max-h-[240px] lg:max-h-none space-y-3 sm:space-y-4 bg-slate-900/40">
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Problem Description</h4>
             <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">{problemStatement}</p>

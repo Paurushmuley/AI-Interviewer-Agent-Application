@@ -68,8 +68,8 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const recognitionRef = useRef<any | null>(null);
 
-  // Coding Workspace State
-  const [activeTab, setActiveTab] = useState<'video' | 'coding'>('video');
+  // Workspace State (Video, Live Code, or Mobile Transcript)
+  const [activeTab, setActiveTab] = useState<'video' | 'coding' | 'transcript'>('video');
   const [codingChallenge, setCodingChallenge] = useState<any | null>(null);
 
   // Voice & Speech synthesis state
@@ -577,174 +577,211 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
   }
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100vh-4rem)] max-w-7xl mx-auto px-3 sm:px-6 py-4 w-full overflow-hidden">
-      {/* Top Session Bar */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-        <div className="flex items-center gap-2.5">
-          <LogoIcon size={28} />
-          <span className="text-xs font-bold text-white uppercase tracking-wider px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
-            {interview?.roleTitle}
-          </span>
-          <span className="text-xs text-slate-400 hidden sm:inline">
-            {interview?.experienceLevel} Level •{' '}
-            {interview?.llmProvider === 'antigravity' || interview?.llmProvider === 'local'
-              ? 'Antigravity AI Sub-Agent Assigned'
-              : interview?.llmProvider === 'ollama'
-              ? `Ollama Local (${interview?.llmModel || 'llama3.2'})`
-              : `Multi-LLM BYOK (${interview?.llmProvider?.toUpperCase()})`}
-          </span>
+    <div className="flex-1 flex flex-col h-[calc(100dvh-4rem)] max-w-7xl mx-auto px-2 sm:px-6 py-2.5 sm:py-4 w-full overflow-hidden">
+      {/* Top Session Bar (Optimized for Mobile & Desktop) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2.5 sm:pb-3 border-b border-slate-800 gap-2.5 shrink-0">
+        {/* Row 1: Branding, Role Badge & Mobile Action Controls */}
+        <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 truncate">
+            <LogoIcon size={26} />
+            <span className="text-xs font-bold text-white uppercase tracking-wider px-2 py-0.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 truncate max-w-[140px] sm:max-w-none">
+              {interview?.roleTitle}
+            </span>
+            <span className="text-xs text-slate-400 hidden md:inline truncate max-w-[200px]">
+              {interview?.experienceLevel} Level
+            </span>
+          </div>
+
+          {/* Mobile-Only Action Strip (Timer & End Button) */}
+          <div className="flex items-center gap-1.5 sm:hidden">
+            <div
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-mono font-bold ${
+                secondsRemaining < 300
+                  ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 animate-pulse'
+                  : 'bg-slate-900 border-slate-800 text-slate-200'
+              }`}
+            >
+              <Clock className="w-3 h-3 text-blue-400" />
+              <span>{formatTimer(secondsRemaining)}</span>
+            </div>
+
+            <button
+              onClick={requestEndInterview}
+              className="p-1.5 bg-rose-600/90 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold shadow-sm flex items-center gap-1 cursor-pointer"
+              title="End Interview"
+            >
+              <StopCircle className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-bold">End</span>
+            </button>
+          </div>
         </div>
 
-        {/* View Switcher Tabs (Video Conference vs Live Code Editor) */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800">
-          <button
-            onClick={() => setActiveTab('video')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-              activeTab === 'video' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Video className="w-3.5 h-3.5" />
-            <span>Video Call</span>
-          </button>
+        {/* Row 2 on Mobile / Right Rail on Desktop: View Switcher Tabs & Audio Settings */}
+        <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
+          {/* View Switcher Tabs (Video vs Coding vs Transcript on Mobile) */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-900 border border-slate-800 flex-1 sm:flex-initial justify-center">
+            <button
+              onClick={() => setActiveTab('video')}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                activeTab === 'video' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Video className="w-3.5 h-3.5" />
+              <span>Video</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('coding')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-              activeTab === 'coding' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Code2 className="w-3.5 h-3.5" />
-            <span>Live Code Editor</span>
-            {codingChallenge && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />}
-          </button>
-        </div>
+            <button
+              onClick={() => setActiveTab('coding')}
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                activeTab === 'coding' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Code2 className="w-3.5 h-3.5" />
+              <span>Code</span>
+              {codingChallenge && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
+            </button>
 
-        {/* Voice Selector, Timer & Finish Button */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Indian English Voice Selector */}
-          {availableVoices.length > 0 && (
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
-              <span className="text-sm" title="Accent: Indian English (en-IN)">🇮🇳</span>
-              <select
-                value={selectedVoice?.name || ''}
-                onChange={(e) => {
-                  const found = availableVoices.find(v => v.name === e.target.value);
-                  if (found) {
-                    setSelectedVoice(found);
-                    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-                      window.speechSynthesis.cancel();
-                      const previewName = found.name.includes('आरोही') || found.name.toLowerCase().includes('arohi') ? 'Arohi' : (found.name.split('-')[0].replace(/Microsoft|Online|Natural|Google/gi, '').trim() || found.name);
-                      const testUtterance = new SpeechSynthesisUtterance(`Hello! Voice set to ${previewName}.`);
-                      testUtterance.voice = found;
-                      testUtterance.rate = speechRateRef.current;
-                      testUtterance.lang = found.lang || 'en-IN';
-                      window.speechSynthesis.speak(testUtterance);
+            {/* Mobile-Only Transcript Switcher Tab */}
+            <button
+              onClick={() => setActiveTab('transcript')}
+              className={`lg:hidden flex-1 sm:flex-initial flex items-center justify-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                activeTab === 'transcript' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Chat ({messages.length})</span>
+            </button>
+          </div>
+
+          {/* Desktop Audio Controls (Voice & Speed & Timer & End Button) */}
+          <div className="hidden sm:flex items-center gap-2 sm:gap-3">
+            {/* Indian English Voice Selector */}
+            {availableVoices.length > 0 && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+                <span className="text-sm" title="Accent: Indian English (en-IN)">🇮🇳</span>
+                <select
+                  value={selectedVoice?.name || ''}
+                  onChange={(e) => {
+                    const found = availableVoices.find(v => v.name === e.target.value);
+                    if (found) {
+                      setSelectedVoice(found);
+                      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                        window.speechSynthesis.cancel();
+                        const previewName = found.name.includes('आरोही') || found.name.toLowerCase().includes('arohi') ? 'Arohi' : (found.name.split('-')[0].replace(/Microsoft|Online|Natural|Google/gi, '').trim() || found.name);
+                        const testUtterance = new SpeechSynthesisUtterance(`Hello! Voice set to ${previewName}.`);
+                        testUtterance.voice = found;
+                        testUtterance.rate = speechRateRef.current;
+                        testUtterance.lang = found.lang || 'en-IN';
+                        window.speechSynthesis.speak(testUtterance);
+                      }
                     }
+                  }}
+                  className="bg-transparent text-slate-300 text-xs focus:outline-none cursor-pointer max-w-[120px] md:max-w-[160px] truncate"
+                  title="Select Interviewer Voice (Default: Arohi)"
+                >
+                  {availableVoices.map((v) => (
+                    <option key={v.name} value={v.name} className="bg-slate-900 text-white">
+                      {v.name.includes('आरोही') || v.name.toLowerCase().includes('arohi')
+                        ? `⭐ 🇮🇳 ${v.name} (Default)`
+                        : v.lang.toLowerCase().includes('in') || v.name.toLowerCase().includes('india')
+                        ? `🇮🇳 ${v.name}`
+                        : v.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Interviewer Speaking Pace / Speed Selector */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+              <span className="text-amber-400 font-bold text-xs" title="Speaking Pace">⚡</span>
+              <select
+                value={speechRate}
+                onChange={(e) => {
+                  const newRate = parseFloat(e.target.value);
+                  setSpeechRate(newRate);
+                  speechRateRef.current = newRate;
+                  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const testUtterance = new SpeechSynthesisUtterance(`Speed ${newRate}x.`);
+                    const activeVoice = selectedVoice || findIndianVoice(window.speechSynthesis.getVoices());
+                    if (activeVoice) {
+                      testUtterance.voice = activeVoice;
+                      testUtterance.lang = activeVoice.lang || 'en-IN';
+                    }
+                    testUtterance.rate = newRate;
+                    window.speechSynthesis.speak(testUtterance);
                   }
                 }}
-                className="bg-transparent text-slate-300 text-xs focus:outline-none cursor-pointer max-w-[120px] md:max-w-[160px] truncate"
-                title="Select Interviewer Voice (Default: Arohi)"
+                className="bg-transparent text-slate-300 text-xs focus:outline-none cursor-pointer"
+                title="Interviewer Speech Speed"
               >
-                {availableVoices.map((v) => (
-                  <option key={v.name} value={v.name} className="bg-slate-900 text-white">
-                    {v.name.includes('आरोही') || v.name.toLowerCase().includes('arohi')
-                      ? `⭐ 🇮🇳 ${v.name} (Default)`
-                      : v.lang.toLowerCase().includes('in') || v.name.toLowerCase().includes('india')
-                      ? `🇮🇳 ${v.name}`
-                      : v.name}
-                  </option>
-                ))}
+                <option value="1.0" className="bg-slate-900 text-white">1.0x Normal</option>
+                <option value="1.12" className="bg-slate-900 text-white">1.12x Natural (Fast)</option>
+                <option value="1.2" className="bg-slate-900 text-white">1.2x Brisk</option>
+                <option value="1.3" className="bg-slate-900 text-white">1.3x Rapid</option>
               </select>
             </div>
-          )}
 
-          {/* Interviewer Speaking Pace / Speed Selector */}
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs">
-            <span className="text-amber-400 font-bold text-xs" title="Speaking Pace">⚡</span>
-            <select
-              value={speechRate}
-              onChange={(e) => {
-                const newRate = parseFloat(e.target.value);
-                setSpeechRate(newRate);
-                speechRateRef.current = newRate;
-                if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-                  window.speechSynthesis.cancel();
-                  const testUtterance = new SpeechSynthesisUtterance(`Speed ${newRate}x.`);
-                  const activeVoice = selectedVoice || findIndianVoice(window.speechSynthesis.getVoices());
-                  if (activeVoice) {
-                    testUtterance.voice = activeVoice;
-                    testUtterance.lang = activeVoice.lang || 'en-IN';
-                  }
-                  testUtterance.rate = newRate;
-                  window.speechSynthesis.speak(testUtterance);
-                }
-              }}
-              className="bg-transparent text-slate-300 text-xs focus:outline-none cursor-pointer"
-              title="Interviewer Speech Speed"
+            <div
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold ${
+                secondsRemaining < 300
+                  ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 animate-pulse'
+                  : 'bg-slate-900 border-slate-800 text-slate-200'
+              }`}
             >
-              <option value="1.0" className="bg-slate-900 text-white">1.0x Normal</option>
-              <option value="1.12" className="bg-slate-900 text-white">1.12x Natural (Fast)</option>
-              <option value="1.2" className="bg-slate-900 text-white">1.2x Brisk</option>
-              <option value="1.3" className="bg-slate-900 text-white">1.3x Rapid</option>
-            </select>
-          </div>
+              <Clock className="w-3.5 h-3.5 text-blue-400" />
+              <span>{formatTimer(secondsRemaining)}</span>
+            </div>
 
-          <div
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold ${
-              secondsRemaining < 300
-                ? 'bg-rose-500/10 border-rose-500/30 text-rose-400 animate-pulse'
-                : 'bg-slate-900 border-slate-800 text-slate-200'
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5 text-blue-400" />
-            <span>{formatTimer(secondsRemaining)}</span>
+            <button
+              onClick={requestEndInterview}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-600/90 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold transition-colors shadow-md shadow-rose-600/20 cursor-pointer shrink-0"
+              title="Conclude and evaluate this interview session"
+            >
+              <StopCircle className="w-3.5 h-3.5" />
+              <span>End & Evaluate</span>
+            </button>
           </div>
-
-          <button
-            onClick={requestEndInterview}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-600/90 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold transition-colors shadow-md shadow-rose-600/20 cursor-pointer"
-            title="Conclude and evaluate this interview session"
-          >
-            <StopCircle className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">End & Evaluate</span>
-          </button>
         </div>
       </div>
 
       {/* Main Interactive Stage */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 py-3 overflow-hidden min-h-0">
-        {/* Left Column: Video Room or Coding Workspace (8 cols) */}
-        <div className="lg:col-span-8 flex flex-col gap-3 h-full overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 py-2 sm:py-3 overflow-hidden min-h-0">
+        {/* Left / Primary Column (8 cols on Desktop, Full on Mobile) */}
+        <div className={`flex flex-col gap-2.5 sm:gap-3 h-full overflow-hidden ${
+          activeTab === 'transcript' ? 'hidden lg:flex lg:col-span-8' : 'col-span-1 lg:col-span-8'
+        }`}>
           {activeTab === 'video' ? (
-            /* Split Screen Video Call: AI Avatar on Left + Candidate WebCam on Right */
-            <div className="relative grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 min-h-0">
+            /* Split Screen Video Call: AI Avatar + Candidate WebCam */
+            <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3 flex-1 min-h-0 overflow-y-auto">
               <AiAvatar
                 isSpeaking={isAiSpeaking}
                 isThinking={isAiThinking}
                 interviewerName={
                   interview?.llmProvider === 'antigravity' || interview?.llmProvider === 'local'
-                    ? 'Arohi (Antigravity AI Sub-Agent • Indian Voice)'
+                    ? 'Arohi (Lead Tech Interviewer • Indian Voice)'
                     : interview?.llmProvider === 'ollama'
-                    ? `Arohi (Ollama • ${interview?.llmModel || 'Local Model'} • Indian Voice)`
-                    : `Arohi (${interview?.llmProvider?.toUpperCase()} • BYOK • Indian Voice)`
+                    ? `Arohi (Ollama • ${interview?.llmModel || 'Local Model'})`
+                    : `Arohi (${interview?.llmProvider?.toUpperCase()} • BYOK)`
                 }
               />
               <CandidateCam candidateName="You (Candidate)" isRecording={isRecording} />
 
               {/* Initial Call Connect Overlay */}
               {!hasStartedCall && (
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-950/85 backdrop-blur-md rounded-2xl p-6 text-center border border-slate-800">
-                  <div className="w-16 h-16 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center mb-4 text-blue-400 animate-pulse shadow-lg shadow-blue-500/20">
-                    <PhoneCall className="w-8 h-8" />
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-950/85 backdrop-blur-md rounded-2xl p-4 sm:p-6 text-center border border-slate-800">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center mb-3 sm:mb-4 text-blue-400 animate-pulse shadow-lg shadow-blue-500/20">
+                    <PhoneCall className="w-7 h-7 sm:w-8 sm:h-8" />
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-1.5">Live Two-Way Video Call Ready</h3>
-                  <p className="text-xs text-slate-300 max-w-md mb-5 leading-relaxed">
-                    Lead Technical Interviewer <strong className="text-blue-400">Arohi</strong> is online.
-                    Two-way conversational audio is enabled. When you speak, the application will catch your words and process them dynamically.
+                  <h3 className="text-base sm:text-lg font-bold text-white mb-1">Live Two-Way Video Call Ready</h3>
+                  <p className="text-xs text-slate-300 max-w-md mb-4 sm:mb-5 leading-relaxed">
+                    Lead Technical Interviewer <strong className="text-blue-400">Arohi</strong> is ready.
+                    Two-way conversational audio is active. When you speak, the application will catch your words dynamically.
                   </p>
                   <button
                     onClick={handleStartCall}
-                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm flex items-center gap-2.5 shadow-xl shadow-blue-500/25 transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
+                    className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs sm:text-sm flex items-center gap-2 shadow-xl shadow-blue-500/25 transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
                   >
                     <PhoneCall className="w-4 h-4" />
                     <span>Join Video Call & Start Speaking</span>
@@ -770,12 +807,12 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
           )}
 
           {/* Bottom Bar: Real-time NLP Metrics & Speech Input */}
-          <div className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2.5">
+          <div className="p-2.5 sm:p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-2 shrink-0">
             {/* Live NLP Metrics Badges & 2-Way Mode Status */}
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2">
               <SpeechMetricsBadge metrics={lastMetrics} />
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 {/* Two-Way Mode Toggle */}
                 <button
                   type="button"
@@ -794,29 +831,30 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                       return next;
                     });
                   }}
-                  className={`px-2.5 py-1 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all border ${
+                  className={`px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xl text-[11px] sm:text-xs font-semibold flex items-center gap-1.5 transition-all border shrink-0 ${
                     isTwoWayMode
                       ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
                       : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
                   }`}
                   title="Toggle Hands-Free Two-Way Live Conversation"
                 >
-                  <Radio className={`w-3.5 h-3.5 ${isTwoWayMode ? 'animate-pulse text-emerald-400' : ''}`} />
-                  <span>{isTwoWayMode ? 'Hands-Free 2-Way: Active' : 'Manual Push-to-Talk'}</span>
+                  <Radio className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isTwoWayMode ? 'animate-pulse text-emerald-400' : ''}`} />
+                  <span className="hidden sm:inline">{isTwoWayMode ? 'Hands-Free 2-Way: Active' : 'Manual Push-to-Talk'}</span>
+                  <span className="sm:hidden">{isTwoWayMode ? '2-Way Live' : 'Manual'}</span>
                 </button>
 
                 {/* Conversation State Indicators */}
                 {isAiSpeaking ? (
-                  <span className="text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
-                    <Volume2 className="w-3.5 h-3.5 animate-pulse" /> Arohi is speaking...
+                  <span className="text-[10px] sm:text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
+                    <Volume2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-pulse" /> Speaking...
                   </span>
                 ) : isAiThinking ? (
-                  <span className="text-[11px] text-purple-400 flex items-center gap-1 font-medium">
-                    <Sparkles className="w-3.5 h-3.5 animate-spin" /> Arohi analyzing response...
+                  <span className="text-[10px] sm:text-[11px] text-purple-400 flex items-center gap-1 font-medium">
+                    <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 animate-spin" /> Thinking...
                   </span>
                 ) : isRecording ? (
-                  <span className="text-[11px] text-rose-400 flex items-center gap-1 font-medium animate-pulse">
-                    <Mic className="w-3.5 h-3.5" /> Listening to you...
+                  <span className="text-[10px] sm:text-[11px] text-rose-400 flex items-center gap-1 font-medium animate-pulse">
+                    <Mic className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Listening...
                   </span>
                 ) : null}
               </div>
@@ -824,12 +862,12 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
 
             {/* Auto-submission Countdown Bar */}
             {autoSendingCountdown !== null && (
-              <div className="flex items-center justify-between px-3 py-1.5 bg-blue-500/15 border border-blue-500/30 rounded-xl text-xs text-blue-200 animate-pulse">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Answer captured. Sending to Arohi in <strong>{autoSendingCountdown}s</strong>...</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-3 py-1.5 bg-blue-500/15 border border-blue-500/30 rounded-xl text-xs text-blue-200 animate-pulse">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                  <span>Answer captured. Sending in <strong>{autoSendingCountdown}s</strong>...</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-end sm:self-auto">
                   <button
                     type="button"
                     onClick={() => handleSendTurnWithText()}
@@ -857,12 +895,12 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
               <button
                 type="button"
                 onClick={toggleSpeechRecognition}
-                className={`p-3 rounded-xl font-medium text-xs flex items-center justify-center transition-all ${
+                className={`p-2.5 sm:p-3 rounded-xl font-medium text-xs flex items-center justify-center transition-all shrink-0 ${
                   isRecording
                     ? 'bg-red-600 text-white animate-pulse shadow-lg shadow-red-600/30'
                     : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700'
                 }`}
-                title={isRecording ? 'Mute / Stop Mic' : 'Start Speaking (Mic)'}
+                title={isRecording ? 'Mute Mic' : 'Speak (Mic)'}
               >
                 {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-blue-400" />}
               </button>
@@ -874,25 +912,25 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                 onKeyDown={e => e.key === 'Enter' && handleSendTurnWithText()}
                 placeholder={
                   isRecording
-                    ? 'Listening live... speak your answer'
+                    ? 'Listening... speak answer'
                     : isTwoWayMode
-                    ? 'Hands-free 2-way mode active (starts listening when interviewer finishes speaking)'
-                    : 'Type or click mic to speak...'
+                    ? '2-Way active (starts listening when AI finishes)'
+                    : 'Tap mic or type answer...'
                 }
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+                className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
               />
 
               <button
                 type="button"
                 onClick={() => handleSendTurnWithText()}
                 disabled={!candidateInput.trim() || isAiThinking}
-                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-md shadow-blue-600/20 shrink-0"
+                className="px-3 sm:px-4 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-md shadow-blue-600/20 shrink-0"
               >
                 {isAiThinking ? (
                   <Sparkles className="w-3.5 h-3.5 animate-spin" />
                 ) : (
                   <>
-                    <span>Send Turn</span>
+                    <span className="hidden xs:inline">Send</span>
                     <Send className="w-3.5 h-3.5" />
                   </>
                 )}
@@ -901,30 +939,32 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
-        {/* Right Column: Live Interview Transcript History (4 cols) */}
-        <div className="lg:col-span-4 flex flex-col h-full rounded-2xl bg-slate-900/40 border border-slate-800 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800">
+        {/* Live Interview Transcript History (Full on Mobile when 'transcript' tab active, 4-cols on Desktop) */}
+        <div className={`flex flex-col h-full rounded-2xl bg-slate-900/40 border border-slate-800 overflow-hidden ${
+          activeTab === 'transcript' ? 'col-span-1 flex min-h-0' : 'hidden lg:flex lg:col-span-4'
+        }`}>
+          <div className="flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 bg-slate-900 border-b border-slate-800 shrink-0">
             <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
               <MessageSquare className="w-3.5 h-3.5 text-blue-400" /> Live Transcript
             </span>
-            <span className="text-[11px] text-slate-400">{messages.length} messages</span>
+            <span className="text-[11px] text-slate-400">{messages.length} turns</span>
           </div>
 
-          <div className="flex-1 p-3.5 space-y-3 overflow-y-auto">
+          <div className="flex-1 p-3 sm:p-3.5 space-y-2.5 sm:space-y-3 overflow-y-auto">
             {messages.map((msg, index) => (
               <div
                 key={msg.id || index}
-                className={`p-3 rounded-xl text-xs leading-relaxed ${
+                className={`p-2.5 sm:p-3 rounded-xl text-xs leading-relaxed ${
                   msg.sender === 'agent'
                     ? 'bg-blue-950/40 border border-blue-500/20 text-slate-200'
                     : msg.sender === 'system'
                     ? 'bg-purple-950/30 border border-purple-500/20 text-purple-200 italic'
-                    : 'bg-slate-950 border border-slate-800 text-slate-100 ml-4'
+                    : 'bg-slate-950 border border-slate-800 text-slate-100 ml-3 sm:ml-4'
                 }`}
               >
                 <div className="flex items-center justify-between text-[10px] text-slate-400 mb-1 font-semibold uppercase">
-                  <span>{msg.sender === 'agent' ? 'Arohi (AI Interviewer • Indian Voice)' : msg.sender === 'system' ? 'System' : 'You'}</span>
-                  <div className="flex items-center gap-1.5">
+                  <span className="truncate max-w-[170px]">{msg.sender === 'agent' ? 'Arohi (AI Lead)' : msg.sender === 'system' ? 'System' : 'You'}</span>
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {msg.sender === 'agent' && (
                       <button
                         type="button"
@@ -938,7 +978,7 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
                     <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </div>
-                <p className="whitespace-pre-wrap">{msg.content}</p>
+                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
               </div>
             ))}
           </div>

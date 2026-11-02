@@ -329,3 +329,27 @@ erDiagram
         text detailed_feedback
     }
 ```
+
+
+---
+
+### 3.12. Mobile Responsiveness & Adaptive Viewport Architecture
+To deliver a premier, seamless interview experience on smartphones (320px–480px), tablets (768px), and compact devices without horizontal overflow or cramped touch controls:
+1. **Dynamic Mobile Viewport Units (`100dvh`)**:
+   - Uses `h-[calc(100dvh-4rem)]` on the live interview room (`/interview/[id]`) to prevent truncation and overflow caused by mobile browser address bars (Safari iOS, Chrome Mobile).
+2. **Mobile Navigation Drawer (`Navbar.tsx`)**:
+   - Replaces desktop navigation links with a hamburger toggle button on screens `< 768px`.
+   - Smooth slide-down drawer surfaces links to Dashboard, New Interview, Candidate profile status, and Log In / Log Out with minimum 44px touch targets.
+3. **Adaptive 3-Tab Live Room Switcher**:
+   - On screens `< 1024px`, splits the video conference room into 3 dedicated tabs:
+     - **Video Tab**: Dual-feed view of Arohi's reactive lip-sync avatar and the candidate's front-facing camera.
+     - **Coding Tab**: Full-height interactive code workspace with responsive problem statement and auto-evaluator.
+     - **Transcript Tab**: Full-screen conversation history with live candidate speech transcription and one-click audio replay buttons.
+   - On desktop screens (`>= 1024px`), seamlessly switches back to side-by-side grid layout (`lg:col-span-8` and `lg:col-span-4`).
+4. **Touch-Optimized Interaction Controls**:
+   - Re-engineered the bottom answer and speech control bar with 44px min tap targets for microphone and send buttons.
+   - Session header organizes into two responsive rows: branding and timer in Row 1, and tab switchers with voice/speed selectors in Row 2.
+   - Speech metrics badge scales dynamically (`text-[11px] sm:text-xs`) to prevent wrapping off-screen.
+5. **Responsive Typography & Form Grids**:
+   - Setup page (`/setup`), dashboard (`/dashboard`), login (`/login`), and registration (`/register`) cards scale paddings (`p-5 sm:p-8`) and heading font sizes to maintain clean margins on narrow displays.
+   - Report page (`/report/[id]`) stacks navigation buttons vertically on mobile and preserves horizontal metric scroll where applicable.

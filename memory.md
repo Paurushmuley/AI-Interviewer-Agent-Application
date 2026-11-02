@@ -135,3 +135,13 @@
   - Implemented reusable `Logo` and `LogoIcon` components (`src/components/brand/Logo.tsx`) with customizable sizing, hover glow, and micro-pulse animations.
   - Added `public/logo.svg` and `src/app/icon.svg` for browser favicon and Apple touch icon support.
   - Integrated into `Navbar.tsx`, `layout.tsx` (header, footer, metadata), `login/page.tsx`, `register/page.tsx`, `setup/page.tsx`, `dashboard/page.tsx`, and `interview/[id]/page.tsx`.
+- **Mobile Viewport Optimization & Responsive Touch Layout**:
+  - Full-spectrum mobile responsiveness across small smartphones (320px–480px), tablets (768px), and desktops.
+  - Replaced rigid `100vh` in `/interview/[id]` with `h-[calc(100dvh-4rem)]` to prevent viewport clipping from dynamic mobile address bars.
+  - Implemented 3-Tab live switcher on mobile (`Video`, `Coding`, `Transcript`) with full interactive audio replay, retaining desktop dual-column layout.
+  - Mobile hamburger toggle drawer on `Navbar.tsx` for easy navigation with 44px touch targets.
+  - Scaled AI Avatar and Candidate WebCam containers to `min-h-[220px] sm:min-h-[280px] md:min-h-[340px]` with flexible canvas size.
+  - Scaled CodeWorkspace problem statement viewports (`max-h-[190px] sm:max-h-[240px]`) and code editor areas (`min-h-[300px] sm:min-h-[420px]`).
+  - Scaled hero headings (`text-3xl sm:text-5xl lg:text-7xl`) and full-width CTA touch buttons on `/`.
+  - Scaled form card paddings (`p-5 sm:p-8`) across `/login`, `/register`, `/setup`, and `/dashboard`.
+  - Stacked action buttons vertically on `/report/[id]` on mobile viewports.

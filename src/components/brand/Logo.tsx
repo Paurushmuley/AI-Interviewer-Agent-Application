@@ -221,7 +221,7 @@ export const Logo: React.FC<LogoProps> = ({
           AI Interviewer
         </span>
         {showSubtitle && (
-          <span className="text-[10px] text-blue-400 font-semibold tracking-wider uppercase -mt-0.5">
+          <span className="text-[10px] text-blue-400 font-semibold tracking-wider uppercase -mt-0.5 hidden min-[400px]:inline">
             {subtitleText}
           </span>
         )}

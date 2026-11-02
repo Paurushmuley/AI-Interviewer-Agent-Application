@@ -54,7 +54,7 @@ export const AiAvatar: React.FC<AiAvatarProps> = ({
   }, []);
 
   return (
-    <div className="relative flex flex-col items-center justify-center w-full h-full min-h-[340px] bg-gradient-to-b from-slate-900 via-slate-950 to-black rounded-2xl border border-slate-800 p-6 overflow-hidden shadow-2xl">
+    <div className="relative flex flex-col items-center justify-center w-full h-full min-h-[220px] sm:min-h-[280px] md:min-h-[340px] bg-gradient-to-b from-slate-900 via-slate-950 to-black rounded-2xl border border-slate-800 p-3 sm:p-6 overflow-hidden shadow-2xl">
       {/* Dynamic Background Glow */}
       <div
         className={`absolute inset-0 transition-opacity duration-700 pointer-events-none ${
@@ -93,7 +93,7 @@ export const AiAvatar: React.FC<AiAvatarProps> = ({
       </div>
 
       {/* SVG AI Avatar Canvas with Lip & Eye Sync */}
-      <div className="relative w-48 h-48 sm:w-56 sm:h-56 my-auto flex items-center justify-center">
+      <div className="relative w-36 h-36 sm:w-48 sm:h-48 md:w-56 md:h-56 my-auto flex items-center justify-center">
         {/* Animated Sound Wave Rings */}
         {isSpeaking && (
           <>

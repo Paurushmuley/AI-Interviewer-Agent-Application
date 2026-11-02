@@ -76,7 +76,7 @@ export const CandidateCam: React.FC<CandidateCamProps> = ({
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center w-full h-full min-h-[340px] bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+    <div className="relative flex flex-col items-center justify-center w-full h-full min-h-[220px] sm:min-h-[280px] md:min-h-[340px] bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
       {/* Video Feed */}
       {cameraActive && !errorMsg ? (
         <video

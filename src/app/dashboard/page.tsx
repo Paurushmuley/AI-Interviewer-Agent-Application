@@ -112,11 +112,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-8">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 w-full space-y-6 sm:space-y-8">
       {/* Welcome Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950/40 border border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950/40 border border-slate-800">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2.5">
+          <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2 sm:gap-2.5">
             <LogoIcon size={30} />
             <span>Welcome back, {user?.name || 'Candidate'}!</span>
           </h1>
@@ -127,7 +127,7 @@ export default function DashboardPage() {
 
         <Link
           href="/setup"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-blue-600/20 transition-all hover:scale-105"
+          className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-blue-600/20 transition-all hover:scale-105"
         >
           <Plus className="w-4 h-4" />
           <span>Start New Interview</span>
@@ -135,54 +135,54 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-medium mb-1">
-            <History className="w-4 h-4 text-blue-400" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-900/60 border border-slate-800">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 text-xs font-medium mb-1">
+            <History className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
             <span>Interviews Taken</span>
           </div>
-          <div className="text-2xl font-bold text-white">{stats?.totalInterviews || 0}</div>
+          <div className="text-xl sm:text-2xl font-bold text-white">{stats?.totalInterviews || 0}</div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-medium mb-1">
-            <Award className="w-4 h-4 text-emerald-400" />
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-900/60 border border-slate-800">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 text-xs font-medium mb-1">
+            <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
             <span>Average Score</span>
           </div>
-          <div className="text-2xl font-bold text-emerald-400">
+          <div className="text-xl sm:text-2xl font-bold text-emerald-400">
             {stats?.avgScore ? `${stats.avgScore}%` : 'N/A'}
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-medium mb-1">
-            <Sparkles className="w-4 h-4 text-indigo-400" />
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-900/60 border border-slate-800">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 text-xs font-medium mb-1">
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-400" />
             <span>Best Score</span>
           </div>
-          <div className="text-2xl font-bold text-indigo-300">
+          <div className="text-xl sm:text-2xl font-bold text-indigo-300">
             {stats?.highestScore ? `${stats.highestScore}%` : 'N/A'}
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-medium mb-1">
-            <Clock className="w-4 h-4 text-amber-400" />
+        <div className="p-3.5 sm:p-5 rounded-2xl bg-slate-900/60 border border-slate-800">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 text-xs font-medium mb-1">
+            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400" />
             <span>Practice Time</span>
           </div>
-          <div className="text-2xl font-bold text-white">{stats?.totalMinutes || 0} mins</div>
+          <div className="text-xl sm:text-2xl font-bold text-white">{stats?.totalMinutes || 0} mins</div>
         </div>
       </div>
 
       {/* BYOK API Key Encryption Manager */}
-      <div className="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between">
+      <div className="p-4 sm:p-6 rounded-2xl bg-slate-900/40 border border-slate-800 space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
           <div className="flex items-center gap-2">
-            <KeyRound className="w-5 h-5 text-blue-400" />
-            <h2 className="text-base font-bold text-white">Multi-LLM BYOK Key Management (AES-256-GCM Encrypted)</h2>
+            <KeyRound className="w-4 sm:w-5 h-4 sm:h-5 text-blue-400 shrink-0" />
+            <h2 className="text-sm sm:text-base font-bold text-white">Multi-LLM BYOK Key Encryption</h2>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-emerald-400">
-            <ShieldCheck className="w-4 h-4" />
-            <span>Encrypted at Rest</span>
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>AES-256-GCM Encrypted at Rest</span>
           </div>
         </div>
 

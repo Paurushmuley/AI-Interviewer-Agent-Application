@@ -181,7 +181,7 @@ Key Requirements:
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 w-full space-y-8">
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-6 sm:py-10 w-full space-y-6 sm:space-y-8">
       {/* Title */}
       <div className="text-center space-y-3">
         <div className="flex justify-center">
@@ -191,7 +191,7 @@ Key Requirements:
           <Sparkles className="w-3.5 h-3.5" />
           <span>Interactive Interview Wizard</span>
         </div>
-        <h1 className="text-3xl font-extrabold text-white">Configure Your Practice Session</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Configure Your Practice Session</h1>
         <p className="text-xs text-slate-400 max-w-lg mx-auto">
           Tailor the role, session duration, and AI provider. Upload your resume for real-time NLP alignment.
         </p>
@@ -205,7 +205,7 @@ Key Requirements:
       )}
 
       {/* Main Settings Card */}
-      <div className="p-6 sm:p-8 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl shadow-2xl space-y-6">
+      <div className="p-4 sm:p-8 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl shadow-2xl space-y-5 sm:space-y-6">
         {/* Step 1: Role & Experience */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
@@ -364,7 +364,7 @@ Key Requirements:
             </span>
           </label>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
             {[
               { id: 'antigravity', name: 'Antigravity Sub-Agent', tag: isLocalEnv ? 'Assigned Agent • Free' : 'Local Only', isLocalOnly: true },
               { id: 'ollama', name: 'Local Ollama', tag: isLocalEnv ? 'localhost:11434' : 'Local Only', isLocalOnly: true },

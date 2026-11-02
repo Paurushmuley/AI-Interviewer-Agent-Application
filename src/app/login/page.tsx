@@ -59,7 +59,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex-1 flex items-center justify-center p-4">
-      <div className="w-full max-w-md p-8 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl shadow-2xl">
+      <div className="w-full max-w-md p-5 sm:p-8 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl shadow-2xl">
         <div className="text-center mb-6">
           <LogoIcon size={52} className="mx-auto mb-4 hover:scale-105 transition-transform" />
           <h2 className="text-2xl font-bold text-white">Welcome Back</h2>

@@ -118,31 +118,31 @@ export default function InterviewReportPage({ params }: { params: Promise<{ id: 
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 w-full space-y-8">
+    <div className="max-w-5xl mx-auto px-3 sm:px-6 py-6 sm:py-10 w-full space-y-6 sm:space-y-8">
       {/* Top Navigation */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <Link
           href="/dashboard"
           className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Account Dashboard</span>
+          <span>Back to Dashboard</span>
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
           <button
             onClick={() => loadReport(true)}
             disabled={regenerating}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-semibold border border-slate-800 transition-colors disabled:opacity-50"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-semibold border border-slate-800 transition-colors disabled:opacity-50"
             title="Recalculate report with latest answer analysis"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-blue-400 ${regenerating ? 'animate-spin' : ''}`} />
-            <span>{regenerating ? 'Re-analyzing...' : 'Re-analyze Report'}</span>
+            <span>{regenerating ? 'Re-analyzing...' : 'Re-analyze'}</span>
           </button>
 
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-blue-500/20 transition-colors"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-md shadow-blue-500/20 transition-colors"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export PDF</span>
@@ -151,9 +151,9 @@ export default function InterviewReportPage({ params }: { params: Promise<{ id: 
       </div>
 
       {/* Header Banner */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950/40 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-2xl">
+      <div className="p-5 sm:p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950/40 border border-slate-800 flex flex-col sm:flex-row items-center sm:items-center justify-between gap-5 sm:gap-6 shadow-2xl text-center sm:text-left">
         <div className="space-y-2">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
             <LogoIcon size={26} />
             <span className="text-[11px] font-bold uppercase tracking-wider text-blue-400 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20">
               Personalized Performance Report
@@ -170,7 +170,7 @@ export default function InterviewReportPage({ params }: { params: Promise<{ id: 
 
         {/* Big Overall Score Circle */}
         <div className="flex items-center gap-4 shrink-0">
-          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-950 border-4 border-blue-500/40 flex flex-col items-center justify-center shadow-lg shadow-blue-500/10">
+          <div className="w-22 h-22 sm:w-28 sm:h-28 rounded-full bg-slate-950 border-4 border-blue-500/40 flex flex-col items-center justify-center shadow-lg shadow-blue-500/10 p-3">
             <span className="text-3xl sm:text-4xl font-black text-white">{overall}</span>
             <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Overall / 100</span>
           </div>
@@ -178,7 +178,7 @@ export default function InterviewReportPage({ params }: { params: Promise<{ id: 
       </div>
 
       {/* 5-Column Core Competencies Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4">
         {/* Technical Architecture */}
         <div className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-2">
           <span className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
