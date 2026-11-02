@@ -145,3 +145,8 @@
   - Scaled hero headings (`text-3xl sm:text-5xl lg:text-7xl`) and full-width CTA touch buttons on `/`.
   - Scaled form card paddings (`p-5 sm:p-8`) across `/login`, `/register`, `/setup`, and `/dashboard`.
   - Stacked action buttons vertically on `/report/[id]` on mobile viewports.
+- **Website Title Logo & Favicon Suite**:
+  - Resolved missing website title tab logo (favicon) in browser tabs.
+  - Generated multi-resolution `src/app/favicon.ico` (16x16, 32x32, 48x48) and `public/icon.png` (32x32), `public/apple-touch-icon.png` (180x180), `public/icon-192.png`, and `public/icon-512.png`.
+  - Configured `src/app/layout.tsx` metadata with complete cross-browser icon declarations (`shortcut`, `icon`, `apple`).
+  - Standardized SVG filter primitives in `Logo.tsx` and `logo.svg` using standard `feMerge` nodes to prevent rendering drops in Chromium and WebKit.

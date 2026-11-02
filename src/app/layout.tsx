@@ -8,10 +8,14 @@ export const metadata: Metadata = {
   description: 'AI-powered realistic technical, behavioral, and coding interviews with live avatar lip-sync, camera feed, and BYOK multi-LLM support.',
   icons: {
     icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', type: 'image/png', sizes: '32x32' },
       { url: '/icon.svg', type: 'image/svg+xml' },
-      { url: '/logo.svg', type: 'image/svg+xml' },
     ],
-    apple: [{ url: '/logo.svg' }],
+    shortcut: '/favicon.ico',
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
 };
 

@@ -69,8 +69,11 @@ export const LogoIcon: React.FC<LogoIconProps> = ({
 
           {/* Luminescent Filter */}
           <filter id="aiCoreGlow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
           </filter>
         </defs>
 
