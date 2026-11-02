@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { UserPlus, Mail, Lock, User, AlertCircle, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, AlertCircle, ArrowRight } from 'lucide-react';
+import { LogoIcon } from '@/components/brand/Logo';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -42,9 +43,7 @@ export default function RegisterPage() {
     <div className="flex-1 flex items-center justify-center p-4">
       <div className="w-full max-w-md p-8 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl shadow-2xl">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mx-auto mb-4">
-            <UserPlus className="w-6 h-6" />
-          </div>
+          <LogoIcon size={52} className="mx-auto mb-4 hover:scale-105 transition-transform" />
           <h2 className="text-2xl font-bold text-white">Create an Account</h2>
           <p className="text-xs text-slate-400 mt-1">
             Track interview practice history, performance metrics, and save your BYOK keys.

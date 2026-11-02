@@ -17,6 +17,7 @@ import {
   Zap,
   Info,
 } from 'lucide-react';
+import { LogoIcon } from '@/components/brand/Logo';
 
 export default function InterviewSetupPage() {
   const router = useRouter();
@@ -182,7 +183,10 @@ Key Requirements:
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 w-full space-y-8">
       {/* Title */}
-      <div className="text-center space-y-2">
+      <div className="text-center space-y-3">
+        <div className="flex justify-center">
+          <LogoIcon size={46} className="hover:scale-105 transition-transform" />
+        </div>
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-medium text-blue-400">
           <Sparkles className="w-3.5 h-3.5" />
           <span>Interactive Interview Wizard</span>

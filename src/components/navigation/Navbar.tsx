@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bot, LayoutDashboard, LogIn, LogOut, Sparkles, User } from 'lucide-react';
+import { LayoutDashboard, LogIn, LogOut, Sparkles, User } from 'lucide-react';
+import { Logo } from '@/components/brand/Logo';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -50,19 +51,7 @@ export const Navbar: React.FC = () => {
     <header className="sticky top-0 z-50 w-full border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
-            <Bot className="w-5 h-5 text-white" />
-          </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-base tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-              AI Interviewer
-            </span>
-            <span className="text-[10px] text-blue-400 font-medium tracking-wider uppercase -mt-0.5">
-              NLP + LLM Platform
-            </span>
-          </div>
-        </Link>
+        <Logo href="/" iconSize={38} />
 
         {/* Navigation Items */}
         <nav className="flex items-center gap-3 sm:gap-4">

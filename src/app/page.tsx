@@ -13,6 +13,7 @@ import {
   Layers,
   CheckCircle2,
 } from 'lucide-react';
+import { LogoIcon } from '@/components/brand/Logo';
 
 export default function HomePage() {
   return (
@@ -22,6 +23,13 @@ export default function HomePage() {
         {/* Glow Effects */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-blue-500/10 blur-[120px] pointer-events-none rounded-full" />
         <div className="absolute top-1/3 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[250px] bg-indigo-500/10 blur-[100px] pointer-events-none rounded-full" />
+
+        {/* Brand Emblem */}
+        <div className="flex justify-center mb-6">
+          <div className="relative group p-1.5 rounded-2xl bg-gradient-to-tr from-blue-500/20 via-indigo-500/20 to-purple-500/20 border border-slate-800 shadow-2xl">
+            <LogoIcon size={56} className="group-hover:scale-105 transition-transform" />
+          </div>
+        </div>
 
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-medium text-blue-400 mb-6">

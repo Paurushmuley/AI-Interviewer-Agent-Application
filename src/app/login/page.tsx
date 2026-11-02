@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { LogIn, Mail, Lock, AlertCircle, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { Mail, Lock, AlertCircle, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { LogoIcon } from '@/components/brand/Logo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -60,9 +61,7 @@ export default function LoginPage() {
     <div className="flex-1 flex items-center justify-center p-4">
       <div className="w-full max-w-md p-8 rounded-2xl bg-slate-900/60 border border-slate-800 backdrop-blur-xl shadow-2xl">
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mx-auto mb-4">
-            <LogIn className="w-6 h-6" />
-          </div>
+          <LogoIcon size={52} className="mx-auto mb-4 hover:scale-105 transition-transform" />
           <h2 className="text-2xl font-bold text-white">Welcome Back</h2>
           <p className="text-xs text-slate-400 mt-1">
             Log in to view past interviews, practice scorecards, and managed keys.

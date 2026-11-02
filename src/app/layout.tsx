@@ -1,10 +1,18 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Navbar } from '@/components/navigation/Navbar';
+import { Logo } from '@/components/brand/Logo';
 
 export const metadata: Metadata = {
   title: 'AI Interviewer - Realistic Hybrid NLP + LLM Interview Platform',
   description: 'AI-powered realistic technical, behavioral, and coding interviews with live avatar lip-sync, camera feed, and BYOK multi-LLM support.',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/logo.svg', type: 'image/svg+xml' },
+    ],
+    apple: [{ url: '/logo.svg' }],
+  },
 };
 
 export default function RootLayout({
@@ -21,10 +29,15 @@ export default function RootLayout({
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col">{children}</main>
 
-        {/* Subtle Footer */}
-        <footer className="border-t border-slate-900 bg-slate-950/40 py-6 text-center text-xs text-slate-500">
-          <div className="max-w-7xl mx-auto px-4">
-            AI Interviewer • Multi-LLM BYOK • Hybrid NLP Speech Analytics • Powered by Vercel & PostgreSQL
+        {/* Subtle Footer with Brand Logo */}
+        <footer className="border-t border-slate-900 bg-slate-950/40 py-6 text-xs text-slate-500">
+          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Logo href="/" iconSize={24} showSubtitle={false} />
+            </div>
+            <div className="text-center sm:text-right">
+              AI Interviewer • Multi-LLM BYOK • Hybrid NLP Speech Analytics • Powered by Vercel & PostgreSQL
+            </div>
           </div>
         </footer>
       </body>

@@ -130,3 +130,8 @@
   - Report directly quotes candidate's exact spoken responses, questions answered, technical technologies claimed, and coding submissions.
   - Added dedicated **"Verbal Delivery & Vocabulary Repetition Analytics"** section to `/report/[id]` displaying Lexical Diversity %, average WPM tempo, filler breakdown, and repeated term pills with counts.
   - Evaluates live coding submission accuracy, edge cases, and algorithmic complexity, seamlessly synthesized via local Ollama or deterministic semantic evaluator.
+- **Brand Logo & Site Identity**:
+  - Designed custom modern SVG brand identity representing conversational audio sound waves (Candidate NLP + AI Voice TTS) merged with a central neural processing core, luminous optical lens diamond, and synaptic data nodes within a cyber-squircle container.
+  - Implemented reusable `Logo` and `LogoIcon` components (`src/components/brand/Logo.tsx`) with customizable sizing, hover glow, and micro-pulse animations.
+  - Added `public/logo.svg` and `src/app/icon.svg` for browser favicon and Apple touch icon support.
+  - Integrated into `Navbar.tsx`, `layout.tsx` (header, footer, metadata), `login/page.tsx`, `register/page.tsx`, `setup/page.tsx`, `dashboard/page.tsx`, and `interview/[id]/page.tsx`.

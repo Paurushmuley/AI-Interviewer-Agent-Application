@@ -18,6 +18,7 @@ import {
   ExternalLink,
   Code2,
 } from 'lucide-react';
+import { LogoIcon } from '@/components/brand/Logo';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -115,7 +116,8 @@ export default function DashboardPage() {
       {/* Welcome Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950/40 border border-slate-800">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2.5">
+            <LogoIcon size={30} />
             <span>Welcome back, {user?.name || 'Candidate'}!</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">

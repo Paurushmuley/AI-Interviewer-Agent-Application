@@ -236,6 +236,15 @@ To strictly eliminate generic templates and deliver fully customized feedback:
 
 ### 3.11. Database Schema Design (PostgreSQL)
 
+---
+
+### 3.11. Brand Design & Vector Identity
+- **Logo Architecture**:
+  - Custom vector emblem (`public/logo.svg`, `src/app/icon.svg`, and `src/components/brand/Logo.tsx`).
+  - Represents the dual-wave conversation loop: Candidate voice capture (NLP frequency bars in cyan) and AI voice synthesis (TTS frequency bars in indigo/purple), connected by a central neural core and synaptic communication arcs.
+  - Scales across micro-favicons (16px), navigation header (36px), auth badges (52px), and hero displays.
+  - Automatic browser favicon and Apple touch icon integration via Next.js metadata and App Router `icon.svg`.
+
 ```mermaid
 erDiagram
     USERS ||--o{ INTERVIEWS : conducts

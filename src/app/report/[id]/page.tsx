@@ -25,6 +25,7 @@ import {
   Layers,
   MessageSquare,
 } from 'lucide-react';
+import { LogoIcon } from '@/components/brand/Logo';
 
 export default function InterviewReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: interviewId } = use(params);
@@ -153,6 +154,7 @@ export default function InterviewReportPage({ params }: { params: Promise<{ id: 
       <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950/40 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-2xl">
         <div className="space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
+            <LogoIcon size={26} />
             <span className="text-[11px] font-bold uppercase tracking-wider text-blue-400 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20">
               Personalized Performance Report
             </span>

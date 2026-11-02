@@ -25,6 +25,7 @@ import { CandidateCam } from '@/components/camera/CandidateCam';
 import { CodeWorkspace } from '@/components/coding/CodeWorkspace';
 import { SpeechMetricsBadge } from '@/components/nlp/SpeechMetricsBadge';
 import { SpeechMetrics } from '@/lib/nlp/speech-analyzer';
+import { LogoIcon } from '@/components/brand/Logo';
 
 export default function InterviewRoomPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -579,7 +580,8 @@ export default function InterviewRoomPage({ params }: { params: Promise<{ id: st
     <div className="flex-1 flex flex-col h-[calc(100vh-4rem)] max-w-7xl mx-auto px-3 sm:px-6 py-4 w-full overflow-hidden">
       {/* Top Session Bar */}
       <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <LogoIcon size={28} />
           <span className="text-xs font-bold text-white uppercase tracking-wider px-2.5 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
             {interview?.roleTitle}
           </span>

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+
+    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#818cf8" />
+      <stop offset="100%" stop-color="#c084fc" />
+    </linearGradient>
+
+    <linearGradient id="cyanGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle Base with Cyber Gradient Border -->
+  <rect x="2.5" y="2.5" width="59" height="59" rx="16" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="2.5" />
+  
+  <!-- Outer Headset / Conversational Audio Halo -->
+  <path
+    d="M18 34C18 24.0589 24.268 16 32 16C39.732 16 46 24.0589 46 34"
+    stroke="url(#primaryGrad)"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    stroke-dasharray="0.5 4"
+    opacity="0.5"
+  />
+
+  <!-- Voice & NLP Sound Frequency Waves -->
+  <rect x="16.5" y="27" width="3" height="10" rx="1.5" fill="url(#cyanGrad)" opacity="0.85" />
+  <rect x="22.5" y="22" width="3.5" height="20" rx="1.75" fill="url(#cyanGrad)" />
+
+  <!-- Center Neural Pillar / AI Core -->
+  <rect x="29" y="15" width="6" height="34" rx="3" fill="url(#primaryGrad)" />
+  
+  <!-- Center Core Lens Sparkle -->
+  <path d="M32 26L34.5 32L32 38L29.5 32Z" fill="#ffffff" />
+
+  <!-- Right Waves -->
+  <rect x="38" y="22" width="3.5" height="20" rx="1.75" fill="url(#primaryGrad)" />
+  <rect x="44.5" y="27" width="3" height="10" rx="1.5" fill="url(#primaryGrad)" opacity="0.85" />
+
+  <!-- Synaptic Arc -->
+  <path
+    d="M20 45C23.5 48 27.5 49.5 32 49.5C36.5 49.5 40.5 48 44 45"
+    stroke="url(#borderGrad)"
+    stroke-width="2"
+    stroke-linecap="round"
+    opacity="0.9"
+  />
+
+  <!-- Synapse Dots -->
+  <circle cx="20" cy="45" r="2" fill="#38bdf8" />
+  <circle cx="44" cy="45" r="2" fill="#c084fc" />
+  <circle cx="32" cy="49.5" r="2.25" fill="#ffffff" />
+</svg>
